@@ -2,15 +2,13 @@ import type { AppProps } from 'next/app';
 import '../styles/globals.css';
 import AdminLayout from '../components/AdminLayout';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { SessionProvider } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 function AppContent({ Component, pageProps }: Pick<AppProps, 'Component' | 'pageProps'>) {
     const router = useRouter();
-    const isAdminPage = router.pathname.startsWith('/admin');
-    const isAdminLoginPage = router.pathname === '/admin/login';
-    const isUserLoginPage = router.pathname === '/login';
+    const isLoginPage = router.pathname === '/login';
+    const isRootPage = router.pathname === '/';
 
     // 모바일 뷰포트 높이 설정: svh 미지원 구형 브라우저(2022년 이전)에서만 --vh 변수로 폴백
     // CSS에서 height: calc(var(--vh, 1vh) * 100); height: 100svh; 형태로 사용
@@ -28,13 +26,13 @@ function AppContent({ Component, pageProps }: Pick<AppProps, 'Component' | 'page
         }
     }, []);
 
-    // 관리자 로그인 페이지는 레이아웃 없이 렌더링
-    if (isAdminLoginPage) {
+    // 로그인 페이지는 레이아웃 없이 렌더링
+    if (isLoginPage) {
         return <Component {...pageProps} />;
     }
 
-    // 어드민 페이지는 AdminLayout 적용
-    if (isAdminPage) {
+    // 루트 페이지(어드민 메인)는 AdminLayout 적용
+    if (isRootPage) {
         const adminPageProps = pageProps as { title?: string; subtitle?: string };
         return (
             <AdminLayout title={adminPageProps.title} subtitle={adminPageProps.subtitle}>
@@ -51,11 +49,9 @@ export default function App({ Component, pageProps }: AppProps) {
     const [queryClient] = useState(() => new QueryClient());
 
     return (
-        <SessionProvider session={pageProps.session}>
-            <QueryClientProvider client={queryClient}>
-                <AppContent Component={Component} pageProps={pageProps} />
-            </QueryClientProvider>
-        </SessionProvider>
+        <QueryClientProvider client={queryClient}>
+            <AppContent Component={Component} pageProps={pageProps} />
+        </QueryClientProvider>
     );
 }
 

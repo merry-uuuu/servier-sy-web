@@ -8,7 +8,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-    { href: '/admin', label: '대시보드' }
+    { href: '/', label: '대시보드' }
 ];
 
 export default function Sidebar() {

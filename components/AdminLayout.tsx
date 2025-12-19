@@ -22,11 +22,11 @@ export default function AdminLayout({ title, subtitle, children, hideSidebar }: 
         method: 'Post',
         showErrorToast: false,
         onSuccess: () => {
-            window.location.href = '/admin/login';
+            window.location.href = '/login';
         },
         onError: () => {
             // 에러가 발생해도 로그아웃 페이지로 이동
-            window.location.href = '/admin/login';
+            window.location.href = '/login';
         }
     });
 
@@ -40,7 +40,7 @@ export default function AdminLayout({ title, subtitle, children, hideSidebar }: 
                 <div className={cls('h-16 flex items-center justify-between px-4')}>
                     <div className={cls('flex items-center gap-2')}>
                         <Link
-                            href="/admin"
+                            href="/"
                             className={cls(
                                 'text-gray-900 font-semibold no-underline visited:text-gray-900'
                             )}

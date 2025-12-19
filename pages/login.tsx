@@ -13,7 +13,7 @@ interface LoginResponse {
     error?: string;
 }
 
-export default function AdminLoginPage() {
+export default function LoginPage() {
     const router = useRouter();
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -23,8 +23,8 @@ export default function AdminLoginPage() {
         method: 'Post',
         showErrorToast: false,
         onSuccess: () => {
-            // 로그인 성공 후 /admin으로 리다이렉트
-            const from = (router.query.from as string) || '/admin';
+            // 로그인 성공 후 /로 리다이렉트
+            const from = (router.query.from as string) || '/';
             // 쿠키가 설정되기 위해 약간의 지연 후 리다이렉트
             setTimeout(() => {
                 window.location.href = from;

@@ -13,6 +13,23 @@ interface UploadedFile {
     data: string[][];
 }
 
+// 업로드 및 시트 생성에 허용된 순서 정의
+const ALLOWED_SHEET_ORDER = [
+    'DEMO',
+    'HIST_E',
+    'PARENT',
+    'EVENT',
+    'TEST',
+    'DRUG',
+    'DRUG1',
+    'DRUG2',
+    'DRUG3',
+    'DRUG_EVENT',
+    'ASSESSMENT',
+    'GROUP'
+];
+const ALLOWED_SHEET_SET = new Set(ALLOWED_SHEET_ORDER);
+
 export default function AdminDashboard({ title, subtitle }: AdminDashboardProps) {
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -41,8 +58,12 @@ export default function AdminDashboard({ title, subtitle }: AdminDashboardProps)
             try {
                 const content = await file.text();
                 const data = parseAsciiFile(content);
+                const nameWithoutExt = getFileNameWithoutExtension(file.name);
+                if (!ALLOWED_SHEET_SET.has(nameWithoutExt)) {
+                    continue;
+                }
                 newFiles.push({
-                    name: getFileNameWithoutExtension(file.name),
+                    name: nameWithoutExt,
                     data
                 });
             } catch (error) {
@@ -90,20 +111,21 @@ export default function AdminDashboard({ title, subtitle }: AdminDashboardProps)
 
         const workbook = XLSX.utils.book_new();
 
-        uploadedFiles.forEach((file) => {
-            // 시트 이름 길이 제한 (엑셀 31자 제한)
-            let sheetName = file.name.substring(0, 31);
-            // 중복 시트명 처리
+        // 허용된 이름만 순서대로 시트 생성
+        ALLOWED_SHEET_ORDER.forEach((sheetName) => {
+            const file = [...uploadedFiles].reverse().find(f => f.name === sheetName);
+            if (!file) return;
+
+            let finalSheetName = sheetName.substring(0, 31);
             let counter = 1;
-            let originalName = sheetName;
-            while (workbook.SheetNames.includes(sheetName)) {
+            while (workbook.SheetNames.includes(finalSheetName)) {
                 const suffix = `_${counter}`;
-                sheetName = originalName.substring(0, 31 - suffix.length) + suffix;
+                finalSheetName = sheetName.substring(0, 31 - suffix.length) + suffix;
                 counter++;
             }
 
             const worksheet = XLSX.utils.aoa_to_sheet(file.data);
-            XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+            XLSX.utils.book_append_sheet(workbook, worksheet, finalSheetName);
         });
 
         // 다운로드

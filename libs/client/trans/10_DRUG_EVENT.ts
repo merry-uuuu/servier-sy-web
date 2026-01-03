@@ -1,0 +1,3 @@
+export const DRUG_EVENT_HEADER_RENAMES: Record<string, string> = {
+  RE_DOSAGE_ALLERGY_YN: "RECHALLENGE_ADR_REOCCUR",
+};

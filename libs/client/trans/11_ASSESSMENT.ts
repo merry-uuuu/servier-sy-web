@@ -1,0 +1,3 @@
+export const ASSESSMENT_HEADER_RENAMES: Record<string, string> = {
+  EVALT_RESULT_CODE: "CAUSALITY_ASSESSMENT",
+};

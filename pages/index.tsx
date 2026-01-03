@@ -1,7 +1,7 @@
 import { GetServerSideProps } from "next";
 import { cls } from "@/libs/client/utils";
 import { useState, useCallback, useRef } from "react";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import {
   DEMO_HEADER_RENAMES,
   REPORT_TYPE_MAP,
@@ -44,6 +44,7 @@ const ALLOWED_SHEET_ORDER = [
   "GROUP",
 ];
 const ALLOWED_SHEET_SET = new Set(ALLOWED_SHEET_ORDER);
+const HEADER_FILL_COLOR = "71AD47";
 
 export default function AdminDashboard({
   title,
@@ -82,7 +83,11 @@ export default function AdminDashboard({
         }
 
         const processedData =
-          nameWithoutExt === "DEMO" ? transformDemoSheet(data) : data;
+          nameWithoutExt === "DEMO"
+            ? transformDemoSheet(data)
+            : nameWithoutExt === "HIST_E"
+            ? transformHistESheet(data)
+            : data;
 
         newFiles.push({
           name: nameWithoutExt,
@@ -149,6 +154,7 @@ export default function AdminDashboard({
       }
 
       const worksheet = XLSX.utils.aoa_to_sheet(file.data);
+      applyHeaderStyle(worksheet);
       XLSX.utils.book_append_sheet(workbook, worksheet, finalSheetName);
     });
 
@@ -164,6 +170,23 @@ export default function AdminDashboard({
   // 전체 초기화
   const clearAll = () => {
     setUploadedFiles([]);
+  };
+
+  const applyHeaderStyle = (worksheet: XLSX.WorkSheet) => {
+    const range = XLSX.utils.decode_range(worksheet["!ref"] ?? "A1");
+    const headerRowIndex = 0;
+
+    for (let c = range.s.c; c <= range.e.c; c += 1) {
+      const cellAddress = XLSX.utils.encode_cell({ r: headerRowIndex, c });
+      const cell = worksheet[cellAddress];
+      if (!cell) continue;
+      cell.s = {
+        fill: {
+          patternType: "solid",
+          fgColor: { rgb: HEADER_FILL_COLOR },
+        },
+      };
+    }
   };
 
   // DEMO 시트 전용 변환: 헤더 이름 변경 + REPORT_TYPE 값 매핑
@@ -286,6 +309,28 @@ export default function AdminDashboard({
     });
 
     return [renamedHeader, ...transformedRows];
+  };
+
+  // HIST_E 시트 전용 변환: 헤더 보정 + 누락 컬럼 추가
+  const transformHistESheet = (data: string[][]): string[][] => {
+    if (data.length === 0) return data;
+
+    const targetHeader = [
+      "KAERS_NO",
+      "PATIENT_HISTORY_MEDDRA_KOR",
+      "PATIENT_HISTORY_MEDDRA_ENG",
+      "PATIENT_HISTORY_START_DATE",
+      "PATIENT_HIST_END_DATE",
+    ];
+
+    const [, ...rows] = data;
+    const transformedRows = rows.map((row) => {
+      const base = row.slice(0, 3);
+      while (base.length < 3) base.push("");
+      return [...base, "", ""];
+    });
+
+    return [targetHeader, ...transformedRows];
   };
 
   return (

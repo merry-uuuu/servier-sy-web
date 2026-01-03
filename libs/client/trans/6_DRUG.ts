@@ -12,3 +12,12 @@ export const DRUG_GROUP_MAP: Record<string, string> = {
   "3": "Drug Interaction",
   "4": "Not administered",
 };
+
+export const DRUG_ACTION_TAKEN_MAP: Record<string, string> = {
+  "1": "discontinued",
+  "2": "dosage reduced",
+  "3": "dosage increased",
+  "4": "dosage unchanged",
+  "0": "unknown",
+  "9": "not applicable",
+};

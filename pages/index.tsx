@@ -26,8 +26,23 @@ import {
   ADR_OUTCOME_MAP,
   EVENT_HEADER_RENAMES,
 } from "@/libs/client/trans/4_EVENT";
-import { TEST_HEADER_RENAMES, TEST_RESULT_MAP } from "@/libs/client/trans/5_TEST";
-import { DRUG_GROUP_MAP, DRUG_HEADER_RENAMES } from "@/libs/client/trans/6_DRUG";
+import {
+  TEST_HEADER_RENAMES,
+  TEST_RESULT_MAP,
+} from "@/libs/client/trans/5_TEST";
+import {
+  DRUG_ACTION_TAKEN_MAP,
+  DRUG_GROUP_MAP,
+  DRUG_HEADER_RENAMES,
+} from "@/libs/client/trans/6_DRUG";
+import {
+  DRUG_EVENT_HEADER_RENAMES,
+  RECHALLENGE_ADR_REOCCUR_MAP,
+} from "@/libs/client/trans/10_DRUG_EVENT";
+import {
+  ASSESSMENT_HEADER_RENAMES,
+  CAUSALITY_ASSESSMENT_MAP,
+} from "@/libs/client/trans/11_ASSESSMENT";
 
 type AdminDashboardProps = {
   title?: string;
@@ -56,6 +71,236 @@ const ALLOWED_SHEET_ORDER = [
 ];
 const ALLOWED_SHEET_SET = new Set(ALLOWED_SHEET_ORDER);
 const HEADER_FILL_COLOR = "71AD47";
+const DRUG_CODE_CSV_PATH = "/templates/의약품품목코드.csv";
+const DOSAGE_UNIT_CSV_PATH = "/templates/투여량 단위.csv";
+const INGREDIENT_CODE_CSV_PATH = "/templates/의약품성분코드.csv";
+const EDQM_CODE_CSV_PATH = "/templates/EDQM코드.csv";
+const KCD7_CSV_PATH = "/templates/KCD7차.csv";
+const KCD8_CSV_PATH = "/templates/KCD8차.csv";
+
+let drugCodeMapPromise: Promise<Map<string, string>> | null = null;
+let dosageUnitMapPromise: Promise<Map<string, string>> | null = null;
+let ingredientCodeMapPromise: Promise<Map<string, string>> | null = null;
+let edqmDrugShapeMapPromise: Promise<Map<string, string>> | null = null;
+let edqmDosageRouteMapPromise: Promise<Map<string, string>> | null = null;
+let kcd7MapPromise: Promise<Map<string, string>> | null = null;
+let kcd8MapPromise: Promise<Map<string, string>> | null = null;
+
+const loadDrugCodeMap = async () => {
+  if (!drugCodeMapPromise) {
+    drugCodeMapPromise = (async () => {
+      const response = await fetch(DRUG_CODE_CSV_PATH);
+      if (!response.ok) {
+        throw new Error("의약품품목코드.csv를 불러오지 못했습니다.");
+      }
+      const csvText = await response.text();
+      const workbook = XLSX.read(csvText, { type: "string" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        blankrows: false,
+      }) as string[][];
+
+      const map = new Map<string, string>();
+      rows.slice(1).forEach((row) => {
+        const code = row[0]?.toString().trim();
+        const name = row[1]?.toString().trim();
+        if (!code || !name) return;
+        map.set(code, name);
+      });
+
+      return map;
+    })();
+  }
+
+  return drugCodeMapPromise;
+};
+
+const loadDosageUnitMap = async () => {
+  if (!dosageUnitMapPromise) {
+    dosageUnitMapPromise = (async () => {
+      const response = await fetch(DOSAGE_UNIT_CSV_PATH);
+      if (!response.ok) {
+        throw new Error("투여량 단위.csv를 불러오지 못했습니다.");
+      }
+      const csvText = await response.text();
+      const workbook = XLSX.read(csvText, { type: "string" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        blankrows: false,
+      }) as string[][];
+
+      const map = new Map<string, string>();
+      rows.forEach((row) => {
+        const code = row[0]?.toString().trim();
+        const value = row[2]?.toString().trim();
+        if (!code || !value) return;
+        map.set(code, value);
+      });
+
+      return map;
+    })();
+  }
+
+  return dosageUnitMapPromise;
+};
+
+const loadIngredientCodeMap = async () => {
+  if (!ingredientCodeMapPromise) {
+    ingredientCodeMapPromise = (async () => {
+      const response = await fetch(INGREDIENT_CODE_CSV_PATH);
+      if (!response.ok) {
+        throw new Error("의약품성분코드.csv를 불러오지 못했습니다.");
+      }
+      const csvText = await response.text();
+      const workbook = XLSX.read(csvText, { type: "string" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        blankrows: false,
+      }) as string[][];
+
+      const map = new Map<string, string>();
+      rows.slice(1).forEach((row) => {
+        const code = row[0]?.toString().trim();
+        const value = row[2]?.toString().trim();
+        if (!code || !value) return;
+        map.set(code, value);
+      });
+
+      return map;
+    })();
+  }
+
+  return ingredientCodeMapPromise;
+};
+
+const loadEdqmDrugShapeMap = async () => {
+  if (!edqmDrugShapeMapPromise) {
+    edqmDrugShapeMapPromise = (async () => {
+      const response = await fetch(EDQM_CODE_CSV_PATH);
+      if (!response.ok) {
+        throw new Error("EDQM코드.csv를 불러오지 못했습니다.");
+      }
+      const csvText = await response.text();
+      const workbook = XLSX.read(csvText, { type: "string" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        blankrows: false,
+      }) as string[][];
+
+      const map = new Map<string, string>();
+      rows.slice(3).forEach((row) => {
+        const code = row[1]?.toString().trim();
+        const name = row[2]?.toString().trim();
+        if (!code || !name) return;
+        map.set(code, name);
+      });
+
+      return map;
+    })();
+  }
+
+  return edqmDrugShapeMapPromise;
+};
+
+const loadEdqmDosageRouteMap = async () => {
+  if (!edqmDosageRouteMapPromise) {
+    edqmDosageRouteMapPromise = (async () => {
+      const response = await fetch(EDQM_CODE_CSV_PATH);
+      if (!response.ok) {
+        throw new Error("EDQM코드.csv를 불러오지 못했습니다.");
+      }
+      const csvText = await response.text();
+      const workbook = XLSX.read(csvText, { type: "string" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        blankrows: false,
+      }) as string[][];
+
+      const map = new Map<string, string>();
+      rows.slice(3).forEach((row) => {
+        const code = row[4]?.toString().trim();
+        const name = row[5]?.toString().trim();
+        if (!code || !name) return;
+        map.set(code, name);
+      });
+
+      return map;
+    })();
+  }
+
+  return edqmDosageRouteMapPromise;
+};
+
+const loadKcdMap = async (version: "7" | "8") => {
+  if (version === "7") {
+    if (!kcd7MapPromise) {
+      kcd7MapPromise = (async () => {
+        const response = await fetch(KCD7_CSV_PATH);
+        if (!response.ok) {
+          throw new Error("KCD7차.csv를 불러오지 못했습니다.");
+        }
+        const csvText = await response.text();
+        const workbook = XLSX.read(csvText, { type: "string" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, {
+          header: 1,
+          blankrows: false,
+        }) as string[][];
+
+        const map = new Map<string, string>();
+        rows.slice(1).forEach((row) => {
+          const code = row[0]?.toString().trim();
+          const value = row[2]?.toString().trim();
+          if (!code || !value) return;
+          map.set(code, value);
+        });
+
+        return map;
+      })();
+    }
+    return kcd7MapPromise;
+  }
+
+  if (!kcd8MapPromise) {
+    kcd8MapPromise = (async () => {
+      const response = await fetch(KCD8_CSV_PATH);
+      if (!response.ok) {
+        throw new Error("KCD8차.csv를 불러오지 못했습니다.");
+      }
+      const csvText = await response.text();
+      const workbook = XLSX.read(csvText, { type: "string" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        blankrows: false,
+      }) as string[][];
+
+      const map = new Map<string, string>();
+      rows.slice(1).forEach((row) => {
+        const code = row[0]?.toString().trim();
+        const value = row[2]?.toString().trim();
+        if (!code || !value) return;
+        map.set(code, value);
+      });
+
+      return map;
+    })();
+  }
+
+  return kcd8MapPromise;
+};
 
 export default function AdminDashboard({
   title,
@@ -64,6 +309,7 @@ export default function AdminDashboard({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [kcdVersion, setKcdVersion] = useState<"7" | "8" | "">("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 파이프 구분자로 파싱
@@ -105,7 +351,17 @@ export default function AdminDashboard({
             : nameWithoutExt === "TEST"
             ? transformTestSheet(data)
             : nameWithoutExt === "DRUG"
-            ? transformDrugSheet(data)
+            ? await transformDrugSheet(data)
+            : nameWithoutExt === "DRUG1"
+            ? await transformDrug1Sheet(data)
+            : nameWithoutExt === "DRUG2"
+            ? await transformDrug2Sheet(data)
+            : nameWithoutExt === "DRUG3"
+            ? await transformDrug3Sheet(data)
+            : nameWithoutExt === "DRUG_EVENT"
+            ? transformDrugEventSheet(data)
+            : nameWithoutExt === "ASSESSMENT"
+            ? transformAssessmentSheet(data)
             : data;
 
         newFiles.push({
@@ -154,6 +410,10 @@ export default function AdminDashboard({
   // 엑셀 다운로드
   const downloadExcel = () => {
     if (uploadedFiles.length === 0) return;
+    if (uploadedFiles.some((file) => file.name === "DRUG3") && !kcdVersion) {
+      alert("KCD 7차 또는 8차를 선택해 주세요.");
+      return;
+    }
 
     const workbook = XLSX.utils.book_new();
 
@@ -203,6 +463,9 @@ export default function AdminDashboard({
         fill: {
           patternType: "solid",
           fgColor: { rgb: HEADER_FILL_COLOR },
+        },
+        font: {
+          color: { rgb: "FFFFFF" },
         },
       };
     }
@@ -357,11 +620,15 @@ export default function AdminDashboard({
     if (data.length === 0) return data;
 
     const [header, ...rows] = data;
-    const renamedHeader = header.map((col) => PARENT_HEADER_RENAMES[col] ?? col);
+    const renamedHeader = header.map(
+      (col) => PARENT_HEADER_RENAMES[col] ?? col
+    );
     const parentAgeUnitIndex = renamedHeader.findIndex(
       (col) => col === "PARENT_AGE_UNIT"
     );
-    const parentSexIndex = renamedHeader.findIndex((col) => col === "PARENT_SEX");
+    const parentSexIndex = renamedHeader.findIndex(
+      (col) => col === "PARENT_SEX"
+    );
 
     const transformedRows = rows.map((row) => {
       const newRow = [...row];
@@ -424,7 +691,7 @@ export default function AdminDashboard({
   };
 
   // DRUG 시트 전용 변환: 헤더 이름 변경 + DRUG_GROUP 값 매핑
-  const transformDrugSheet = (data: string[][]): string[][] => {
+  const transformDrugSheet = async (data: string[][]): Promise<string[][]> => {
     if (data.length === 0) return data;
 
     const [header, ...rows] = data;
@@ -432,12 +699,227 @@ export default function AdminDashboard({
     const drugGroupIndex = renamedHeader.findIndex(
       (col) => col === "DRUG_GROUP"
     );
+    const drugCodeIndex = renamedHeader.findIndex((col) => col === "DRUG_CODE");
+    const accumulateDosageUnitIndex = renamedHeader.findIndex(
+      (col) => col === "ACCUMULATE_DOSAGE_SINCE_ONSET_UNIT"
+    );
+    const drugActionTakenIndex = renamedHeader.findIndex(
+      (col) => col === "DRUG_ACTION_TAKEN"
+    );
+    const drugCodeMap = await loadDrugCodeMap();
+    const dosageUnitMap = await loadDosageUnitMap();
 
     const transformedRows = rows.map((row) => {
       const newRow = [...row];
       if (drugGroupIndex !== -1 && drugGroupIndex < row.length) {
         const rawValue = row[drugGroupIndex];
         newRow[drugGroupIndex] = DRUG_GROUP_MAP[rawValue] ?? rawValue;
+      }
+      if (drugCodeIndex !== -1 && drugCodeIndex < row.length) {
+        const rawValue = row[drugCodeIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[drugCodeIndex] = drugCodeMap.get(rawValue) ?? rawValue;
+        }
+      }
+      if (
+        accumulateDosageUnitIndex !== -1 &&
+        accumulateDosageUnitIndex < row.length
+      ) {
+        const rawValue = row[accumulateDosageUnitIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[accumulateDosageUnitIndex] =
+            dosageUnitMap.get(rawValue) ?? rawValue;
+        }
+      }
+      if (drugActionTakenIndex !== -1 && drugActionTakenIndex < row.length) {
+        const rawValue = row[drugActionTakenIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[drugActionTakenIndex] =
+            DRUG_ACTION_TAKEN_MAP[rawValue] ?? rawValue;
+        }
+      }
+      return newRow;
+    });
+
+    return [renamedHeader, ...transformedRows];
+  };
+
+  // DRUG1 시트 전용 변환: INGR_CD 값 VLOOKUP 치환
+  const transformDrug1Sheet = async (data: string[][]): Promise<string[][]> => {
+    if (data.length === 0) return data;
+
+    const [header, ...rows] = data;
+    const ingredientIndex = header.findIndex((col) => col === "INGR_CD");
+    if (ingredientIndex === -1) return data;
+
+    const ingredientMap = await loadIngredientCodeMap();
+    const transformedRows = rows.map((row) => {
+      const newRow = [...row];
+      if (ingredientIndex < row.length) {
+        const rawValue = row[ingredientIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[ingredientIndex] = ingredientMap.get(rawValue) ?? rawValue;
+        }
+      }
+      return newRow;
+    });
+
+    return [header, ...transformedRows];
+  };
+
+  // DRUG2 시트 전용 변환: DOSAGE_QTY_UNIT 값 VLOOKUP 치환
+  const transformDrug2Sheet = async (data: string[][]): Promise<string[][]> => {
+    if (data.length === 0) return data;
+
+    const [header, ...rows] = data;
+    const dosageQtyUnitIndex = header.findIndex(
+      (col) => col === "DOSAGE_QTY_UNIT"
+    );
+    const dosageIntervalUnitIndex = header.findIndex(
+      (col) => col === "DOSAGE_INTERVAL_UNIT"
+    );
+    const dosageAdministrationUnitIndex = header.findIndex(
+      (col) => col === "DOSAGE_ADMINISTRATION PERIOD_UNIT"
+    );
+    const drugFormulationEngIndex = header.findIndex(
+      (col) => col === "DRUG_FORMULATION_ENG"
+    );
+    const dosageRouteEngIndex = header.findIndex(
+      (col) => col === "DOSAGE_ROUTE_ENG"
+    );
+    if (
+      dosageQtyUnitIndex === -1 &&
+      dosageIntervalUnitIndex === -1 &&
+      dosageAdministrationUnitIndex === -1 &&
+      drugFormulationEngIndex === -1 &&
+      dosageRouteEngIndex === -1
+    ) {
+      return data;
+    }
+
+    const dosageUnitMap = await loadDosageUnitMap();
+    const edqmDrugShapeMap = await loadEdqmDrugShapeMap();
+    const edqmDosageRouteMap = await loadEdqmDosageRouteMap();
+    const transformedRows = rows.map((row) => {
+      const newRow = [...row];
+      if (dosageQtyUnitIndex < row.length) {
+        const rawValue = row[dosageQtyUnitIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[dosageQtyUnitIndex] = dosageUnitMap.get(rawValue) ?? rawValue;
+        }
+      }
+      if (
+        dosageIntervalUnitIndex !== -1 &&
+        dosageIntervalUnitIndex < row.length
+      ) {
+        const rawValue = row[dosageIntervalUnitIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[dosageIntervalUnitIndex] =
+            dosageUnitMap.get(rawValue) ?? rawValue;
+        }
+      }
+      if (
+        dosageAdministrationUnitIndex !== -1 &&
+        dosageAdministrationUnitIndex < row.length
+      ) {
+        const rawValue = row[dosageAdministrationUnitIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[dosageAdministrationUnitIndex] =
+            dosageUnitMap.get(rawValue) ?? rawValue;
+        }
+      }
+      if (
+        drugFormulationEngIndex !== -1 &&
+        drugFormulationEngIndex < row.length
+      ) {
+        const rawValue = row[drugFormulationEngIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[drugFormulationEngIndex] =
+            edqmDrugShapeMap.get(rawValue) ?? rawValue;
+        }
+      }
+      if (dosageRouteEngIndex !== -1 && dosageRouteEngIndex < row.length) {
+        const rawValue = row[dosageRouteEngIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[dosageRouteEngIndex] =
+            edqmDosageRouteMap.get(rawValue) ?? rawValue;
+        }
+      }
+      return newRow;
+    });
+
+    return [header, ...transformedRows];
+  };
+
+  // DRUG3 시트 전용 변환: PURPOSE OF ADMINISTRATION 값 VLOOKUP 치환
+  const transformDrug3Sheet = async (data: string[][]): Promise<string[][]> => {
+    if (data.length === 0) return data;
+    if (!kcdVersion) return data;
+
+    const [header, ...rows] = data;
+    const purposeIndex = header.findIndex(
+      (col) => col === "PURPOSE OF ADMINISTRATION"
+    );
+    if (purposeIndex === -1) return data;
+
+    const kcdMap = await loadKcdMap(kcdVersion);
+    const transformedRows = rows.map((row) => {
+      const newRow = [...row];
+      if (purposeIndex < row.length) {
+        const rawValue = row[purposeIndex]?.toString().trim();
+        if (rawValue) {
+          newRow[purposeIndex] = kcdMap.get(rawValue) ?? rawValue;
+        }
+      }
+      return newRow;
+    });
+
+    return [header, ...transformedRows];
+  };
+
+  // DRUG_EVENT 시트 전용 변환: 헤더 이름 변경 + RECHALLENGE_ADR_REOCCUR 값 매핑
+  const transformDrugEventSheet = (data: string[][]): string[][] => {
+    if (data.length === 0) return data;
+
+    const [header, ...rows] = data;
+    const renamedHeader = header.map(
+      (col) => DRUG_EVENT_HEADER_RENAMES[col] ?? col
+    );
+    const rechallengeIndex = renamedHeader.findIndex(
+      (col) => col === "RECHALLENGE_ADR_REOCCUR"
+    );
+
+    const transformedRows = rows.map((row) => {
+      const newRow = [...row];
+      if (rechallengeIndex !== -1 && rechallengeIndex < row.length) {
+        const rawValue = row[rechallengeIndex];
+        newRow[rechallengeIndex] =
+          RECHALLENGE_ADR_REOCCUR_MAP[rawValue] ?? rawValue;
+      }
+      return newRow;
+    });
+
+    return [renamedHeader, ...transformedRows];
+  };
+
+  // ASSESSMENT 시트 전용 변환: 헤더 이름 변경 + CAUSALITY_ASSESSMENT 값 매핑
+  const transformAssessmentSheet = (data: string[][]): string[][] => {
+    if (data.length === 0) return data;
+
+    const [header, ...rows] = data;
+    const renamedHeader = header.map(
+      (col) => ASSESSMENT_HEADER_RENAMES[col] ?? col
+    );
+    const causalityIndex = renamedHeader.findIndex(
+      (col) => col === "CAUSALITY_ASSESSMENT"
+    );
+
+    const transformedRows = rows.map((row) => {
+      const newRow = [...row];
+      if (causalityIndex !== -1 && causalityIndex < row.length) {
+        const rawValue = row[causalityIndex];
+        newRow[causalityIndex] =
+          CAUSALITY_ASSESSMENT_MAP[rawValue] ?? rawValue;
       }
       return newRow;
     });
@@ -488,9 +970,6 @@ export default function AdminDashboard({
           <span className="font-semibold text-black">클릭하여 파일 선택</span>{" "}
           또는 드래그 앤 드롭
         </p>
-        <p className="text-sm text-gray-500">
-          파이프(|) 구분자 형식의 텍스트 파일 (.txt, .csv, .dat)
-        </p>
       </div>
 
       {/* 처리 중 표시 */}
@@ -504,44 +983,69 @@ export default function AdminDashboard({
       {/* 업로드된 파일 목록 */}
       {uploadedFiles.length > 0 && (
         <div className="mt-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h3 className="text-lg font-semibold">
-              업로드된 파일 ({uploadedFiles.length}개)
+              업로드된 파일 {uploadedFiles.length}개
             </h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 rounded-[4px] bg-blue-50 px-3 py-1.5">
+                <span className="text-xs font-semibold text-blue-700">
+                  KCD 선택
+                </span>
+                <label className="flex items-center gap-1 text-xs text-blue-900">
+                  <input
+                    type="radio"
+                    name="kcdVersion"
+                    value="7"
+                    checked={kcdVersion === "7"}
+                    onChange={() => setKcdVersion("7")}
+                    className="h-3.5 w-3.5 accent-blue-600"
+                  />
+                  7차
+                </label>
+                <label className="flex items-center gap-1 text-xs text-blue-900">
+                  <input
+                    type="radio"
+                    name="kcdVersion"
+                    value="8"
+                    checked={kcdVersion === "8"}
+                    onChange={() => setKcdVersion("8")}
+                    className="h-3.5 w-3.5 accent-blue-600"
+                  />
+                  8차
+                </label>
+              </div>
               <button
                 onClick={clearAll}
-                className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-3 py-1.5 text-sm text-blue-700 bg-white border border-blue-200 rounded-[4px] hover:bg-blue-50"
               >
                 전체 삭제
               </button>
               <button
                 onClick={downloadExcel}
-                className="px-4 py-1.5 text-sm text-white bg-black rounded-md hover:bg-gray-900"
+                className="px-4 py-1.5 text-sm text-white bg-blue-600 rounded-[4px] hover:bg-blue-700"
               >
                 엑셀 다운로드
               </button>
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
             {uploadedFiles.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                className="flex items-center gap-2 rounded-[4px] border border-blue-100 bg-white px-3 py-1.5 shadow-sm"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-green-600">✓</span>
-                  <div>
-                    <p className="font-medium">{file.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {file.data.length}행 × {file.data[0]?.length || 0}열
-                    </p>
-                  </div>
+                <span className="text-blue-600">●</span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{file.name}</span>
+                  <span className="text-[11px] text-blue-700/70">
+                    {file.data.length}행 × {file.data[0]?.length || 0}열
+                  </span>
                 </div>
                 <button
                   onClick={() => removeFile(index)}
-                  className="text-gray-400 hover:text-red-500 p-1"
+                  className="ml-1 text-blue-300 hover:text-blue-600"
                   title="삭제"
                 >
                   ✕
@@ -561,7 +1065,7 @@ export const getServerSideProps: GetServerSideProps<
   return {
     props: {
       title: "파일 변환",
-      subtitle: "파이프(|) 구분자 파일을 엑셀로 변환합니다.",
+      subtitle: "",
     },
   };
 };

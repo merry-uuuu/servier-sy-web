@@ -928,14 +928,14 @@ export default function AdminDashboard({
   };
 
   return (
-    <div className={cls("text-gray-900")}>
+    <div className={cls("text-[#24226A]")}>
       {/* 파일 업로드 영역 */}
       <div
         className={cls(
           "border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer",
           dragActive
-            ? "border-black bg-gray-100"
-            : "border-gray-300 hover:border-gray-400"
+            ? "border-[#24226A] bg-[#24226A]/10"
+            : "border-[#24226A]/30 hover:border-[#24226A]"
         )}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -953,7 +953,7 @@ export default function AdminDashboard({
         />
         <div className="mb-3">
           <svg
-            className="mx-auto h-12 w-12 text-gray-400"
+            className="mx-auto h-12 w-12 text-[#24226A]/40"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 48 48"
@@ -966,15 +966,17 @@ export default function AdminDashboard({
             />
           </svg>
         </div>
-        <p className="text-gray-600 mb-1">
-          <span className="font-semibold text-black">클릭하여 파일 선택</span>{" "}
+        <p className="text-[#24226A]/70 mb-1">
+          <span className="font-semibold text-[#24226A]">
+            클릭하여 파일 선택
+          </span>{" "}
           또는 드래그 앤 드롭
         </p>
       </div>
 
       {/* 처리 중 표시 */}
       {isProcessing && (
-        <div className="mt-4 text-center text-gray-600">
+        <div className="mt-4 text-center text-[#24226A]/70">
           <span className="inline-block animate-spin mr-2">⏳</span>
           파일 처리 중...
         </div>
@@ -988,67 +990,67 @@ export default function AdminDashboard({
               업로드된 파일 {uploadedFiles.length}개
             </h3>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-[4px] bg-blue-50 px-3 py-1.5">
-                <span className="text-xs font-semibold text-blue-700">
+              <div className="flex items-center gap-2 rounded-[4px] bg-[#24226A]/10 px-3 py-1.5">
+                <span className="text-xs font-semibold text-[#24226A]">
                   KCD 선택
                 </span>
-                <label className="flex items-center gap-1 text-xs text-blue-900">
+                <label className="flex items-center gap-1 text-xs text-[#24226A]">
                   <input
                     type="radio"
                     name="kcdVersion"
                     value="7"
                     checked={kcdVersion === "7"}
                     onChange={() => setKcdVersion("7")}
-                    className="h-3.5 w-3.5 accent-blue-600"
+                    className="h-3.5 w-3.5 accent-[#24226A] focus:outline-none focus:ring-0"
                   />
                   7차
                 </label>
-                <label className="flex items-center gap-1 text-xs text-blue-900">
+                <label className="flex items-center gap-1 text-xs text-[#24226A]">
                   <input
                     type="radio"
                     name="kcdVersion"
                     value="8"
                     checked={kcdVersion === "8"}
                     onChange={() => setKcdVersion("8")}
-                    className="h-3.5 w-3.5 accent-blue-600"
+                    className="h-3.5 w-3.5 accent-[#24226A] focus:outline-none focus:ring-0"
                   />
                   8차
                 </label>
               </div>
               <button
                 onClick={clearAll}
-                className="px-3 py-1.5 text-sm text-blue-700 bg-white border border-blue-200 rounded-[4px] hover:bg-blue-50"
+                className="px-3 py-1.5 text-sm text-[#24226A] bg-white border border-[#24226A]/20 rounded-[4px] hover:bg-[#24226A]/10"
               >
                 전체 삭제
               </button>
               <button
                 onClick={downloadExcel}
-                className="px-4 py-1.5 text-sm text-white bg-blue-600 rounded-[4px] hover:bg-blue-700"
+                className="px-4 py-1.5 text-sm text-white bg-[#24226A] rounded-[4px] hover:bg-[#1e1c57]"
               >
                 엑셀 다운로드
               </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="divide-y divide-[#24226A]/10 rounded-[6px] border border-[#24226A]/10 bg-white">
             {uploadedFiles.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 rounded-[4px] border border-blue-100 bg-white px-3 py-1.5 shadow-sm"
+                className="flex items-center justify-between px-3 py-2"
               >
-                <span className="text-blue-600">●</span>
-                <div className="flex flex-col">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-[#24226A]/60">●</span>
                   <span className="text-sm font-medium">{file.name}</span>
-                  <span className="text-[11px] text-blue-700/70">
-                    {file.data.length}행 × {file.data[0]?.length || 0}열
+                  <span className="text-xs text-[#24226A]/50">
+                    {file.data.length}×{file.data[0]?.length || 0}
                   </span>
                 </div>
                 <button
                   onClick={() => removeFile(index)}
-                  className="ml-1 text-blue-300 hover:text-blue-600"
+                  className="text-xs text-[#24226A]/40 hover:text-[#24226A]"
                   title="삭제"
                 >
-                  ✕
+                  삭제
                 </button>
               </div>
             ))}

@@ -77,6 +77,7 @@ const INGREDIENT_CODE_CSV_PATH = "/templates/의약품성분코드.csv";
 const EDQM_CODE_CSV_PATH = "/templates/EDQM코드.csv";
 const KCD7_CSV_PATH = "/templates/KCD7차.csv";
 const KCD8_CSV_PATH = "/templates/KCD8차.csv";
+const WHOART_CODE_CSV_PATH = "/templates/ WHOART 코드집.csv";
 
 let drugCodeMapPromise: Promise<Map<string, string>> | null = null;
 let dosageUnitMapPromise: Promise<Map<string, string>> | null = null;
@@ -85,6 +86,7 @@ let edqmDrugShapeMapPromise: Promise<Map<string, string>> | null = null;
 let edqmDosageRouteMapPromise: Promise<Map<string, string>> | null = null;
 let kcd7MapPromise: Promise<Map<string, string>> | null = null;
 let kcd8MapPromise: Promise<Map<string, string>> | null = null;
+let whoartEnglishMapPromise: Promise<Map<string, string>> | null = null;
 
 const loadDrugCodeMap = async () => {
   if (!drugCodeMapPromise) {
@@ -302,6 +304,38 @@ const loadKcdMap = async (version: "7" | "8") => {
   return kcd8MapPromise;
 };
 
+const loadWhoartEnglishMap = async () => {
+  if (!whoartEnglishMapPromise) {
+    whoartEnglishMapPromise = (async () => {
+      const response = await fetch(WHOART_CODE_CSV_PATH);
+      if (!response.ok) {
+        throw new Error("WHOART 코드집.csv를 불러오지 못했습니다.");
+      }
+      const csvText = await response.text();
+      const workbook = XLSX.read(csvText, { type: "string" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        blankrows: false,
+      }) as string[][];
+
+      const map = new Map<string, string>();
+      rows.slice(2).forEach((row) => {
+        const arrn = row[0]?.toString().trim();
+        const seq = row[1]?.toString().trim();
+        const english = row[6]?.toString().trim();
+        if (!arrn || !seq || !english) return;
+        map.set(`${arrn}|${seq}`, english);
+      });
+
+      return map;
+    })();
+  }
+
+  return whoartEnglishMapPromise;
+};
+
 export default function AdminDashboard({
   title,
   subtitle,
@@ -347,7 +381,7 @@ export default function AdminDashboard({
             : nameWithoutExt === "PARENT"
             ? transformParentSheet(data)
             : nameWithoutExt === "EVENT"
-            ? transformEventSheet(data)
+            ? await transformEventSheet(data)
             : nameWithoutExt === "TEST"
             ? transformTestSheet(data)
             : nameWithoutExt === "DRUG"
@@ -647,7 +681,9 @@ export default function AdminDashboard({
   };
 
   // EVENT 시트 전용 변환: 헤더 이름 변경 + ADR_OUTCOME 값 매핑
-  const transformEventSheet = (data: string[][]): string[][] => {
+  const transformEventSheet = async (
+    data: string[][]
+  ): Promise<string[][]> => {
     if (data.length === 0) return data;
 
     const [header, ...rows] = data;
@@ -655,12 +691,38 @@ export default function AdminDashboard({
     const adrOutcomeIndex = renamedHeader.findIndex(
       (col) => col === "ADR_OUTCOME"
     );
+    const whoartArrnIndex = renamedHeader.findIndex(
+      (col) => col === "WHOART_PT"
+    );
+    const whoartSeqIndex = renamedHeader.findIndex(
+      (col) => col === "WHOART_IT"
+    );
+    const englishTermIndex = renamedHeader.findIndex(
+      (col) => col === "ENGLISH TERM"
+    );
+    const whoartEnglishMap = await loadWhoartEnglishMap();
 
     const transformedRows = rows.map((row) => {
       const newRow = [...row];
       if (adrOutcomeIndex !== -1 && adrOutcomeIndex < row.length) {
         const rawValue = row[adrOutcomeIndex];
         newRow[adrOutcomeIndex] = ADR_OUTCOME_MAP[rawValue] ?? rawValue;
+      }
+      if (
+        englishTermIndex !== -1 &&
+        whoartArrnIndex !== -1 &&
+        whoartSeqIndex !== -1 &&
+        englishTermIndex < row.length &&
+        whoartArrnIndex < row.length &&
+        whoartSeqIndex < row.length
+      ) {
+        const arrn = row[whoartArrnIndex]?.toString().trim();
+        const seq = row[whoartSeqIndex]?.toString().trim();
+        if (arrn && seq) {
+          const key = `${arrn}|${seq}`;
+          newRow[englishTermIndex] =
+            whoartEnglishMap.get(key) ?? newRow[englishTermIndex];
+        }
       }
       return newRow;
     });

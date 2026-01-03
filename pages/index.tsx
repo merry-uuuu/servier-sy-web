@@ -17,6 +17,17 @@ import {
   PATIENT_SEX_MAP,
   PREGNANCY_TERM_OCCURRENCE_UNIT_MAP,
 } from "@/libs/client/trans/1_DEMO";
+import {
+  PARENT_HEADER_RENAMES,
+  PARENT_AGE_UNIT_MAP,
+  PARENT_SEX_MAP,
+} from "@/libs/client/trans/3_PARENT";
+import {
+  ADR_OUTCOME_MAP,
+  EVENT_HEADER_RENAMES,
+} from "@/libs/client/trans/4_EVENT";
+import { TEST_HEADER_RENAMES, TEST_RESULT_MAP } from "@/libs/client/trans/5_TEST";
+import { DRUG_GROUP_MAP, DRUG_HEADER_RENAMES } from "@/libs/client/trans/6_DRUG";
 
 type AdminDashboardProps = {
   title?: string;
@@ -87,6 +98,14 @@ export default function AdminDashboard({
             ? transformDemoSheet(data)
             : nameWithoutExt === "HIST_E"
             ? transformHistESheet(data)
+            : nameWithoutExt === "PARENT"
+            ? transformParentSheet(data)
+            : nameWithoutExt === "EVENT"
+            ? transformEventSheet(data)
+            : nameWithoutExt === "TEST"
+            ? transformTestSheet(data)
+            : nameWithoutExt === "DRUG"
+            ? transformDrugSheet(data)
             : data;
 
         newFiles.push({
@@ -331,6 +350,99 @@ export default function AdminDashboard({
     });
 
     return [targetHeader, ...transformedRows];
+  };
+
+  // PARENT 시트 전용 변환: 헤더 이름 변경 + PARENT_AGE_UNIT 값 매핑
+  const transformParentSheet = (data: string[][]): string[][] => {
+    if (data.length === 0) return data;
+
+    const [header, ...rows] = data;
+    const renamedHeader = header.map((col) => PARENT_HEADER_RENAMES[col] ?? col);
+    const parentAgeUnitIndex = renamedHeader.findIndex(
+      (col) => col === "PARENT_AGE_UNIT"
+    );
+    const parentSexIndex = renamedHeader.findIndex((col) => col === "PARENT_SEX");
+
+    const transformedRows = rows.map((row) => {
+      const newRow = [...row];
+      if (parentAgeUnitIndex !== -1 && parentAgeUnitIndex < row.length) {
+        const rawValue = row[parentAgeUnitIndex];
+        newRow[parentAgeUnitIndex] = PARENT_AGE_UNIT_MAP[rawValue] ?? rawValue;
+      }
+      if (parentSexIndex !== -1 && parentSexIndex < row.length) {
+        const rawValue = row[parentSexIndex];
+        newRow[parentSexIndex] = PARENT_SEX_MAP[rawValue] ?? rawValue;
+      }
+      return newRow;
+    });
+
+    return [renamedHeader, ...transformedRows];
+  };
+
+  // EVENT 시트 전용 변환: 헤더 이름 변경 + ADR_OUTCOME 값 매핑
+  const transformEventSheet = (data: string[][]): string[][] => {
+    if (data.length === 0) return data;
+
+    const [header, ...rows] = data;
+    const renamedHeader = header.map((col) => EVENT_HEADER_RENAMES[col] ?? col);
+    const adrOutcomeIndex = renamedHeader.findIndex(
+      (col) => col === "ADR_OUTCOME"
+    );
+
+    const transformedRows = rows.map((row) => {
+      const newRow = [...row];
+      if (adrOutcomeIndex !== -1 && adrOutcomeIndex < row.length) {
+        const rawValue = row[adrOutcomeIndex];
+        newRow[adrOutcomeIndex] = ADR_OUTCOME_MAP[rawValue] ?? rawValue;
+      }
+      return newRow;
+    });
+
+    return [renamedHeader, ...transformedRows];
+  };
+
+  // TEST 시트 전용 변환: 헤더 이름 변경 + TEST_RESULT 값 매핑
+  const transformTestSheet = (data: string[][]): string[][] => {
+    if (data.length === 0) return data;
+
+    const [header, ...rows] = data;
+    const renamedHeader = header.map((col) => TEST_HEADER_RENAMES[col] ?? col);
+    const testResultIndex = renamedHeader.findIndex(
+      (col) => col === "TEST_RESULT"
+    );
+
+    const transformedRows = rows.map((row) => {
+      const newRow = [...row];
+      if (testResultIndex !== -1 && testResultIndex < row.length) {
+        const rawValue = row[testResultIndex];
+        newRow[testResultIndex] = TEST_RESULT_MAP[rawValue] ?? rawValue;
+      }
+      return newRow;
+    });
+
+    return [renamedHeader, ...transformedRows];
+  };
+
+  // DRUG 시트 전용 변환: 헤더 이름 변경 + DRUG_GROUP 값 매핑
+  const transformDrugSheet = (data: string[][]): string[][] => {
+    if (data.length === 0) return data;
+
+    const [header, ...rows] = data;
+    const renamedHeader = header.map((col) => DRUG_HEADER_RENAMES[col] ?? col);
+    const drugGroupIndex = renamedHeader.findIndex(
+      (col) => col === "DRUG_GROUP"
+    );
+
+    const transformedRows = rows.map((row) => {
+      const newRow = [...row];
+      if (drugGroupIndex !== -1 && drugGroupIndex < row.length) {
+        const rawValue = row[drugGroupIndex];
+        newRow[drugGroupIndex] = DRUG_GROUP_MAP[rawValue] ?? rawValue;
+      }
+      return newRow;
+    });
+
+    return [renamedHeader, ...transformedRows];
   };
 
   return (

@@ -4,3 +4,10 @@ export const TEST_HEADER_RENAMES: Record<string, string> = {
   TEST_RESULT_CODE: "TEST_RESULT",
   TEST_RESULT_CONT: "TEST_RESULT_CONTENT",
 };
+
+export const TEST_RESULT_MAP: Record<string, string> = {
+  "1": "positive",
+  "2": "negative",
+  "3": "boundary",
+  "4": "unassessable",
+};

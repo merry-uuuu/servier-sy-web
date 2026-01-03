@@ -14,3 +14,12 @@ export const EVENT_HEADER_RENAMES: Record<string, string> = {
   SE_ANMLY: "SER_ANOMALY",
   SE_ETC_IMPRTNC_SITTN: "SER_MEDICALLY IMPORTANT",
 };
+
+export const ADR_OUTCOME_MAP: Record<string, string> = {
+  "1": "resolved",
+  "2": "resolving",
+  "3": "not resolved",
+  "4": "resolved with sequelae",
+  "5": "death due to AE/ADR",
+  "0": "unknown",
+};

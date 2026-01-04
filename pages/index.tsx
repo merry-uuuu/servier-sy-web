@@ -467,6 +467,7 @@ export default function AdminDashboard({
       }
 
       const worksheet = XLSX.utils.aoa_to_sheet(file.data);
+      worksheet["!cols"] = calcAutoCols(file.data);
       applyHeaderStyle(worksheet);
       XLSX.utils.book_append_sheet(workbook, worksheet, finalSheetName);
     });
@@ -503,6 +504,21 @@ export default function AdminDashboard({
         },
       };
     }
+  };
+
+  const calcAutoCols = (
+    rows: Array<Array<string | number | null | undefined>>
+  ): XLSX.ColInfo[] => {
+    const maxLens: number[] = [];
+
+    rows.forEach((row) => {
+      row.forEach((cell, i) => {
+        const len = String(cell ?? "").length;
+        maxLens[i] = Math.max(maxLens[i] ?? 0, len);
+      });
+    });
+
+    return maxLens.map((len) => ({ wch: Math.min(len + 2, 350) }));
   };
 
   // DEMO 시트 전용 변환: 헤더 이름 변경 + REPORT_TYPE 값 매핑
@@ -681,9 +697,7 @@ export default function AdminDashboard({
   };
 
   // EVENT 시트 전용 변환: 헤더 이름 변경 + ADR_OUTCOME 값 매핑
-  const transformEventSheet = async (
-    data: string[][]
-  ): Promise<string[][]> => {
+  const transformEventSheet = async (data: string[][]): Promise<string[][]> => {
     if (data.length === 0) return data;
 
     const [header, ...rows] = data;
@@ -980,8 +994,7 @@ export default function AdminDashboard({
       const newRow = [...row];
       if (causalityIndex !== -1 && causalityIndex < row.length) {
         const rawValue = row[causalityIndex];
-        newRow[causalityIndex] =
-          CAUSALITY_ASSESSMENT_MAP[rawValue] ?? rawValue;
+        newRow[causalityIndex] = CAUSALITY_ASSESSMENT_MAP[rawValue] ?? rawValue;
       }
       return newRow;
     });

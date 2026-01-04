@@ -518,7 +518,7 @@ export default function AdminDashboard({
       });
     });
 
-    return maxLens.map((len) => ({ wch: Math.min(len + 2, 350) }));
+    return maxLens.map((len) => ({ wch: Math.min(len + 5, 10000) }));
   };
 
   // DEMO 시트 전용 변환: 헤더 이름 변경 + REPORT_TYPE 값 매핑

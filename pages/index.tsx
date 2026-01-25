@@ -76,6 +76,7 @@ const ALLOWED_SHEET_ORDER = [
 const ALLOWED_SHEET_SET = new Set(ALLOWED_SHEET_ORDER);
 const HEADER_FILL_COLOR = "71AD47";
 const DRUG_CODE_CSV_PATH = "/templates/의약품품목코드.csv";
+const DRUG_CODE_FOR_DRUG_CSV_PATH = "/templates/의약품품목코드_FOR_DRUG.csv";
 const DOSAGE_UNIT_CSV_PATH = "/templates/투여량 단위.csv";
 const INGREDIENT_CODE_CSV_PATH = "/templates/의약품성분코드.csv";
 const EDQM_CODE_CSV_PATH = "/templates/EDQM코드.csv";
@@ -83,6 +84,10 @@ const KCD8_CSV_PATH = "/templates/KCD8차.csv";
 const WHOART_CODE_CSV_PATH = "/templates/ WHOART 코드집.csv";
 
 let drugCodeMapPromise: Promise<Map<string, string>> | null = null;
+let drugCodeForDrugMapPromise: Promise<{
+  korMap: Map<string, string>;
+  engMap: Map<string, string>;
+}> | null = null;
 let dosageUnitMapPromise: Promise<Map<string, string>> | null = null;
 let ingredientCodeMapPromise: Promise<Map<string, string>> | null = null;
 let edqmDrugShapeMapPromise: Promise<Map<string, string>> | null = null;
@@ -119,6 +124,40 @@ const loadDrugCodeMap = async () => {
   }
 
   return drugCodeMapPromise;
+};
+
+const loadDrugCodeForDrugMap = async () => {
+  if (!drugCodeForDrugMapPromise) {
+    drugCodeForDrugMapPromise = (async () => {
+      const response = await fetch(DRUG_CODE_FOR_DRUG_CSV_PATH);
+      if (!response.ok) {
+        throw new Error("의약품품목코드_FOR_DRUG.csv를 불러오지 못했습니다.");
+      }
+      const csvText = await response.text();
+      const workbook = XLSX.read(csvText, { type: "string" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        blankrows: false,
+      }) as string[][];
+
+      const korMap = new Map<string, string>();
+      const engMap = new Map<string, string>();
+      rows.slice(1).forEach((row) => {
+        const code = row[0]?.toString().trim();
+        const korName = row[1]?.toString().trim();
+        const engName = row[2]?.toString().trim();
+        if (!code) return;
+        if (korName) korMap.set(code, korName);
+        if (engName) engMap.set(code, engName);
+      });
+
+      return { korMap, engMap };
+    })();
+  }
+
+  return drugCodeForDrugMapPromise;
 };
 
 const loadDosageUnitMap = async () => {
@@ -825,7 +864,7 @@ export default function AdminDashboard({
     return [renamedHeader, ...transformedRows];
   };
 
-  // DRUG 시트 전용 변환: 헤더 이름 변경 + DRUG_GROUP 값 매핑
+  // DRUG 시트 전용 변환: 헤더 이름 변경 + DRUG_GROUP 값 매핑 + DRUG_CODE_ENG 열 추가
   const transformDrugSheet = async (data: string[][]): Promise<string[][]> => {
     if (data.length === 0) return data;
 
@@ -841,11 +880,24 @@ export default function AdminDashboard({
     const drugActionTakenIndex = renamedHeader.findIndex(
       (col) => col === "DRUG_ACTION_TAKEN"
     );
-    const drugCodeMap = await loadDrugCodeMap();
+    const { korMap: drugCodeKorMap, engMap: drugCodeEngMap } =
+      await loadDrugCodeForDrugMap();
     const dosageUnitMap = await loadDosageUnitMap();
+
+    // DRUG_CODE 열 다음에 DRUG_CODE_ENG 열 추가
+    const finalHeader = [...renamedHeader];
+    if (drugCodeIndex !== -1) {
+      finalHeader.splice(drugCodeIndex + 1, 0, "DRUG_CODE_ENG");
+    }
 
     const transformedRows = rows.map((row) => {
       const newRow = [...row];
+      // 원래 DRUG_CODE 값 저장 (변환 전)
+      const originalDrugCode =
+        drugCodeIndex !== -1 && drugCodeIndex < row.length
+          ? row[drugCodeIndex]?.toString().trim()
+          : "";
+
       if (drugGroupIndex !== -1 && drugGroupIndex < row.length) {
         const rawValue = row[drugGroupIndex];
         newRow[drugGroupIndex] = DRUG_GROUP_MAP[rawValue] ?? rawValue;
@@ -853,7 +905,7 @@ export default function AdminDashboard({
       if (drugCodeIndex !== -1 && drugCodeIndex < row.length) {
         const rawValue = row[drugCodeIndex]?.toString().trim();
         if (rawValue) {
-          newRow[drugCodeIndex] = drugCodeMap.get(rawValue) ?? rawValue;
+          newRow[drugCodeIndex] = drugCodeKorMap.get(rawValue) ?? rawValue;
         }
       }
       if (
@@ -875,10 +927,19 @@ export default function AdminDashboard({
             DRUG_ACTION_TAKEN_MAP[rawValue] ?? rawValue;
         }
       }
+
+      // DRUG_CODE_ENG 열 삽입 (DRUG_CODE 다음 위치)
+      if (drugCodeIndex !== -1) {
+        const engValue = originalDrugCode
+          ? drugCodeEngMap.get(originalDrugCode) ?? ""
+          : "";
+        newRow.splice(drugCodeIndex + 1, 0, engValue);
+      }
+
       return newRow;
     });
 
-    return [renamedHeader, ...transformedRows];
+    return [finalHeader, ...transformedRows];
   };
 
   // DRUG1 시트 전용 변환: INGR_CD 값 VLOOKUP 치환

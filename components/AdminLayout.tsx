@@ -65,7 +65,7 @@ export default function AdminLayout({
       <div className={cls("flex-1 flex")}>
         {!hideSidebar && <Sidebar />}
         <main className={cls("flex-1 bg-white")}>
-          <div className={cls("p-6")}>
+          <div className={cls("p-6 pb-16")}>
             {title && (
               <h1 className={cls("text-xl font-semibold text-gray-900 mb-1")}>
                 {title}
@@ -78,6 +78,12 @@ export default function AdminLayout({
           </div>
         </main>
       </div>
+
+      <footer className={cls("fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white py-4")}>
+        <div className={cls("text-center text-sm text-gray-500")}>
+          © {new Date().getFullYear()} CHOAZ SOFT. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 }

@@ -378,14 +378,57 @@ export default function AdminDashboard({
   const processFiles = useCallback(async (files: FileList | File[]) => {
     setIsProcessing(true);
     const newFiles: UploadedFile[] = [];
+    const filesArray = Array.from(files);
 
-    for (const file of Array.from(files)) {
+    // 1. DEMO 파일을 먼저 찾아서 SFRPNO에 값이 있는 KAERS_NO 목록 수집
+    let kaersNoToDelete: Set<string> = new Set();
+    const demoFile = filesArray.find(
+      (f) => getFileNameWithoutExtension(f.name) === "DEMO"
+    );
+
+    if (demoFile) {
+      const content = await demoFile.text();
+      const data = parseAsciiFile(content);
+      if (data.length > 0) {
+        const [header, ...rows] = data;
+        // SFRPNO(C열)와 KAERS_NO 열 인덱스 찾기
+        const sfrpnoIndex = header.findIndex((col) => col === "SFRPNO");
+        const kaersNoIndex = header.findIndex((col) => col === "KAERS_NO");
+
+        if (sfrpnoIndex !== -1 && kaersNoIndex !== -1) {
+          rows.forEach((row) => {
+            const sfrpnoValue = row[sfrpnoIndex]?.toString().trim();
+            const kaersNoValue = row[kaersNoIndex]?.toString().trim();
+            // SFRPNO에 값이 있으면 해당 KAERS_NO를 삭제 목록에 추가
+            if (sfrpnoValue && kaersNoValue) {
+              kaersNoToDelete.add(kaersNoValue);
+            }
+          });
+        }
+      }
+    }
+
+    // 2. 모든 파일 처리
+    for (const file of filesArray) {
       try {
         const content = await file.text();
-        const data = parseAsciiFile(content);
+        let data = parseAsciiFile(content);
         const nameWithoutExt = getFileNameWithoutExtension(file.name);
         if (!ALLOWED_SHEET_SET.has(nameWithoutExt)) {
           continue;
+        }
+
+        // SFRPNO에 값이 있는 KAERS_NO를 가진 행 삭제
+        if (kaersNoToDelete.size > 0 && data.length > 0) {
+          const [header, ...rows] = data;
+          const kaersNoIndex = header.findIndex((col) => col === "KAERS_NO");
+          if (kaersNoIndex !== -1) {
+            const filteredRows = rows.filter((row) => {
+              const kaersNoValue = row[kaersNoIndex]?.toString().trim();
+              return !kaersNoToDelete.has(kaersNoValue);
+            });
+            data = [header, ...filteredRows];
+          }
         }
 
         const processedData =

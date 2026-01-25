@@ -1,16 +1,51 @@
 import { GetServerSideProps } from "next";
 import { cls } from "@/libs/client/utils";
 import { useState, useCallback, useRef } from "react";
+import * as XLSX from "xlsx-js-style";
 
 type NarrativePageProps = {
   title?: string;
   subtitle?: string;
 };
 
+interface KaersData {
+  kaersNo: string;
+  initialFu: string;        // GROUP 시트의 INITIAL_FU
+  drugCode: string;         // DRUG 시트의 DRUG_CODE
+  patientSex: string;       // DEMO 시트의 PATIENT SEX
+  patientBirthYear: string; // DEMO 시트의 PATIENT BIRTH YEAR
+  adrStartDate: string;     // EVENT 시트의 ADR_START_DATE
+}
+
 interface UploadedFile {
   name: string;
-  content: string;
+  kaersDataList: KaersData[];
 }
+
+const NARRATIVE_HEADERS = [
+  "KAERS_NO",
+  "KAERS GROUP No",
+  "Local Ref. No.",
+  "Mfr.Control no.",
+  "Type (Initial/FU)",
+  "Suspected Drug",
+  "Patient Gender",
+  "Patient DOB",
+  "Event",
+  "Event(GS)",
+  "Seriousness\nYes/No",
+  "Related\nYes/No",
+  "Event causality as determined (GS)",
+  "Onset date",
+  "Day 0\n(Download date)",
+  "Due date of reporting to GS",
+  "Date of reporting to central GS",
+  "late reporting to GS?",
+  "Product complaints issue\nYes/No",
+  "Narrative",
+];
+
+const HEADER_FILL_COLOR = "71AD47";
 
 export default function NarrativePage({
   title,
@@ -28,19 +63,145 @@ export default function NarrativePage({
     return fileName.substring(0, lastDotIndex);
   };
 
-  // 파일 처리
+  // 시트 데이터를 Map으로 변환하는 헬퍼 함수
+  const parseSheetToMap = (
+    workbook: XLSX.WorkBook,
+    sheetName: string,
+    keyColumn: string,
+    valueColumns: string[]
+  ): Map<string, Record<string, string>> => {
+    const map = new Map<string, Record<string, string>>();
+    const sheet = workbook.SheetNames.find(
+      (name) => name.toUpperCase() === sheetName.toUpperCase()
+    );
+    if (!sheet) return map;
+
+    const worksheet = workbook.Sheets[sheet];
+    const data = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+      blankrows: false,
+    }) as string[][];
+
+    if (data.length === 0) return map;
+
+    const [header, ...rows] = data;
+    const keyIndex = header.findIndex(
+      (col) => col?.toString().toUpperCase() === keyColumn.toUpperCase()
+    );
+    if (keyIndex === -1) return map;
+
+    const valueIndices = valueColumns.map((col) =>
+      header.findIndex(
+        (h) => h?.toString().toUpperCase() === col.toUpperCase()
+      )
+    );
+
+    rows.forEach((row) => {
+      const key = row[keyIndex]?.toString().trim();
+      if (!key) return;
+
+      const values: Record<string, string> = {};
+      valueColumns.forEach((col, i) => {
+        const idx = valueIndices[i];
+        values[col] = idx !== -1 ? (row[idx]?.toString().trim() ?? "") : "";
+      });
+
+      // 기존 값이 없거나 비어있을 때만 저장 (첫 번째 값 유지)
+      if (!map.has(key)) {
+        map.set(key, values);
+      }
+    });
+
+    return map;
+  };
+
+  // 파일 처리 - 엑셀 파일에서 여러 시트의 데이터 추출
   const processFiles = useCallback(async (files: FileList | File[]) => {
     setIsProcessing(true);
     const newFiles: UploadedFile[] = [];
 
     for (const file of Array.from(files)) {
       try {
-        const content = await file.text();
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+        // GROUP 시트에서 KAERS_NO, INITIAL_FU 추출
+        const groupMap = parseSheetToMap(workbook, "GROUP", "KAERS_NO", ["INITIAL_FU"]);
+
+        if (groupMap.size === 0) {
+          console.error(`GROUP 시트를 찾을 수 없거나 비어있습니다: ${file.name}`);
+          continue;
+        }
+
+        // DRUG 시트에서 DRUG_CODE 추출 (DRUG_GROUP이 "Suspect"인 것만)
+        const drugMap = new Map<string, string>();
+        const drugSheet = workbook.SheetNames.find(
+          (name) => name.toUpperCase() === "DRUG"
+        );
+        if (drugSheet) {
+          const worksheet = workbook.Sheets[drugSheet];
+          const data = XLSX.utils.sheet_to_json(worksheet, {
+            header: 1,
+            blankrows: false,
+          }) as string[][];
+
+          if (data.length > 0) {
+            const [header, ...rows] = data;
+            const kaersNoIdx = header.findIndex(
+              (col) => col?.toString().toUpperCase() === "KAERS_NO"
+            );
+            const drugCodeIdx = header.findIndex(
+              (col) => col?.toString().toUpperCase() === "DRUG_CODE"
+            );
+            const drugGroupIdx = header.findIndex(
+              (col) => col?.toString().toUpperCase() === "DRUG_GROUP"
+            );
+
+            if (kaersNoIdx !== -1 && drugCodeIdx !== -1) {
+              rows.forEach((row) => {
+                const kaersNo = row[kaersNoIdx]?.toString().trim();
+                const drugCode = row[drugCodeIdx]?.toString().trim();
+                const drugGroup = drugGroupIdx !== -1 ? row[drugGroupIdx]?.toString().trim() : "";
+
+                // DRUG_GROUP이 "Suspect"인 것만 저장, 첫 번째 값 유지
+                if (kaersNo && drugCode && drugGroup === "Suspect" && !drugMap.has(kaersNo)) {
+                  drugMap.set(kaersNo, drugCode);
+                }
+              });
+            }
+          }
+        }
+
+        // DEMO 시트에서 PATIENT SEX, PATIENT BIRTH YEAR 추출
+        const demoMap = parseSheetToMap(workbook, "DEMO", "KAERS_NO", [
+          "PATIENT SEX",
+          "PATIENT BIRTH YEAR",
+        ]);
+
+        // EVENT 시트에서 ADR_START_DATE 추출
+        const eventMap = parseSheetToMap(workbook, "EVENT", "KAERS_NO", ["ADR_START_DATE"]);
+
+        // GROUP 시트의 KAERS_NO 기준으로 데이터 조합
+        const kaersDataList: KaersData[] = [];
+        groupMap.forEach((groupData, kaersNo) => {
+          const demoData = demoMap.get(kaersNo) ?? {};
+          const eventData = eventMap.get(kaersNo) ?? {};
+
+          kaersDataList.push({
+            kaersNo,
+            initialFu: groupData["INITIAL_FU"] ?? "",
+            drugCode: drugMap.get(kaersNo) ?? "",
+            patientSex: demoData["PATIENT SEX"] ?? "",
+            patientBirthYear: demoData["PATIENT BIRTH YEAR"] ?? "",
+            adrStartDate: eventData["ADR_START_DATE"] ?? "",
+          });
+        });
+
         const nameWithoutExt = getFileNameWithoutExtension(file.name);
 
         newFiles.push({
           name: nameWithoutExt,
-          content: content,
+          kaersDataList: kaersDataList,
         });
       } catch (error) {
         console.error(`파일 처리 오류: ${file.name}`, error);
@@ -50,6 +211,101 @@ export default function NarrativePage({
     setUploadedFiles((prev) => [...prev, ...newFiles]);
     setIsProcessing(false);
   }, []);
+
+  // 헤더 스타일 적용
+  const applyHeaderStyle = (worksheet: XLSX.WorkSheet) => {
+    const range = XLSX.utils.decode_range(worksheet["!ref"] ?? "A1");
+    const headerRowIndex = 0;
+
+    for (let c = range.s.c; c <= range.e.c; c += 1) {
+      const cellAddress = XLSX.utils.encode_cell({ r: headerRowIndex, c });
+      const cell = worksheet[cellAddress];
+      if (!cell) continue;
+      cell.s = {
+        fill: {
+          patternType: "solid",
+          fgColor: { rgb: HEADER_FILL_COLOR },
+        },
+        font: {
+          color: { rgb: "FFFFFF" },
+        },
+        alignment: {
+          wrapText: true,
+          vertical: "center",
+          horizontal: "center",
+        },
+      };
+    }
+  };
+
+  // 열 너비 자동 계산
+  const calcAutoCols = (
+    rows: Array<Array<string | number | null | undefined>>
+  ): XLSX.ColInfo[] => {
+    const maxLens: number[] = [];
+
+    const getDisplayWidth = (str: string): number => {
+      let width = 0;
+      for (const char of str) {
+        if (/[\u1100-\u11FF\u3000-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]/.test(char)) {
+          width += 2;
+        } else {
+          width += 1;
+        }
+      }
+      return width;
+    };
+
+    rows.forEach((row) => {
+      row.forEach((cell, i) => {
+        const cellStr = String(cell ?? "");
+        // 줄바꿈이 있는 경우 각 줄 중 가장 긴 것으로 계산
+        const lines = cellStr.split("\n");
+        const maxLineWidth = Math.max(...lines.map((line) => getDisplayWidth(line)));
+        maxLens[i] = Math.max(maxLens[i] ?? 0, maxLineWidth);
+      });
+    });
+
+    return maxLens.map((len) => ({ wch: Math.min(len + 2, 50) }));
+  };
+
+  // 엑셀 다운로드
+  const downloadExcel = () => {
+    if (uploadedFiles.length === 0) return;
+
+    // 모든 업로드된 파일의 데이터를 합침
+    const allKaersData = uploadedFiles.flatMap((file) => file.kaersDataList);
+
+    // 헤더 + 데이터 행 생성
+    const sheetData: string[][] = [NARRATIVE_HEADERS];
+
+    // 헤더 인덱스 매핑
+    const COL_KAERS_NO = 0;           // KAERS_NO
+    const COL_KAERS_GROUP_NO = 1;     // KAERS GROUP No (← INITIAL_FU)
+    const COL_SUSPECTED_DRUG = 5;     // Suspected Drug (← DRUG_CODE)
+    const COL_PATIENT_GENDER = 6;     // Patient Gender (← PATIENT SEX)
+    const COL_PATIENT_DOB = 7;        // Patient DOB (← PATIENT BIRTH YEAR)
+    const COL_ONSET_DATE = 13;        // Onset date (← ADR_START_DATE)
+
+    allKaersData.forEach((data) => {
+      const row = new Array(NARRATIVE_HEADERS.length).fill("");
+      row[COL_KAERS_NO] = data.kaersNo;
+      row[COL_KAERS_GROUP_NO] = data.initialFu;
+      row[COL_SUSPECTED_DRUG] = data.drugCode;
+      row[COL_PATIENT_GENDER] = data.patientSex;
+      row[COL_PATIENT_DOB] = data.patientBirthYear;
+      row[COL_ONSET_DATE] = data.adrStartDate;
+      sheetData.push(row);
+    });
+
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+    worksheet["!cols"] = calcAutoCols(sheetData);
+    applyHeaderStyle(worksheet);
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Narrative");
+    XLSX.writeFile(workbook, "Narrative_Template.xlsx");
+  };
 
   // 파일 선택 핸들러
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,7 +366,7 @@ export default function NarrativePage({
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".txt,.csv,.dat"
+          accept=".xlsx,.xls"
           onChange={handleFileChange}
           className="hidden"
         />
@@ -159,6 +415,12 @@ export default function NarrativePage({
               >
                 전체 삭제
               </button>
+              <button
+                onClick={downloadExcel}
+                className="px-4 py-1.5 text-sm text-white bg-[#24226A] rounded-[4px] hover:bg-[#1e1c57]"
+              >
+                엑셀 다운로드
+              </button>
             </div>
           </div>
 
@@ -171,6 +433,9 @@ export default function NarrativePage({
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-[#24226A]/60">●</span>
                   <span className="text-sm font-medium">{file.name}</span>
+                  <span className="text-xs text-[#24226A]/50">
+                    KAERS_NO {file.kaersDataList.length}건
+                  </span>
                 </div>
                 <button
                   onClick={() => removeFile(index)}

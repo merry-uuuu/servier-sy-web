@@ -684,7 +684,7 @@ export default function AdminDashboard({
     return [renamedHeader, ...transformedRows];
   };
 
-  // EVENT 시트 전용 변환: 헤더 이름 변경 + ADR_OUTCOME 값 매핑 + ENGLISH TERM 열 추가
+  // EVENT 시트 전용 변환: 헤더 이름 변경 + ADR_OUTCOME 값 매핑 + ENGLISH TERM 열 추가 + Serious 열 추가
   const transformEventSheet = async (data: string[][]): Promise<string[][]> => {
     if (data.length === 0) return data;
 
@@ -702,6 +702,24 @@ export default function AdminDashboard({
     const whoartSeqIndex = renamedHeader.findIndex(
       (col) => col === "WHOART_IT"
     );
+    const serDeathIndex = renamedHeader.findIndex(
+      (col) => col === "SER_DEATH"
+    );
+    const serLifeThreatIndex = renamedHeader.findIndex(
+      (col) => col === "SER_LIFE_THREAT"
+    );
+    const serHospitalizationIndex = renamedHeader.findIndex(
+      (col) => col === "SER_HOSPITALIZATION"
+    );
+    const serDisabilityIndex = renamedHeader.findIndex(
+      (col) => col === "SER_DISABILITY"
+    );
+    const serAnomalyIndex = renamedHeader.findIndex(
+      (col) => col === "SER_ANOMALY"
+    );
+    const serMedicallyImportantIndex = renamedHeader.findIndex(
+      (col) => col === "SER_MEDICALLY IMPORTANT"
+    );
     const whoartEnglishMap = await loadWhoartEnglishMap();
 
     // ADR_MEDDRA_ENG 다음 위치에 PT, IME 열 추가
@@ -718,6 +736,21 @@ export default function AdminDashboard({
         : -1;
     if (englishTermInsertIndex !== -1) {
       finalHeader.splice(englishTermInsertIndex, 0, "ENGLISH TERM");
+    }
+
+    // SER_DEATH 왼쪽에 Serious 열 추가 (PT, IME, ENGLISH TERM 추가로 인해 인덱스 조정)
+    let seriousInsertIndex = -1;
+    if (serDeathIndex !== -1) {
+      seriousInsertIndex = serDeathIndex;
+      // PT, IME 추가로 인한 조정
+      if (ptImeInsertIndex !== -1 && ptImeInsertIndex <= serDeathIndex) {
+        seriousInsertIndex += 2;
+      }
+      // ENGLISH TERM 추가로 인한 조정
+      if (englishTermInsertIndex !== -1 && englishTermInsertIndex <= seriousInsertIndex) {
+        seriousInsertIndex += 1;
+      }
+      finalHeader.splice(seriousInsertIndex, 0, "Serious");
     }
 
     const transformedRows = rows.map((row) => {
@@ -744,6 +777,24 @@ export default function AdminDashboard({
         const key = `${arrn}|${seq}`;
         const englishTerm = (arrn && seq) ? (whoartEnglishMap.get(key) ?? "") : "";
         newRow.splice(englishTermInsertIndex, 0, englishTerm);
+      }
+
+      // Serious 열 추가: SER_* 열 중 하나라도 값이 있으면 Y, 없으면 N
+      if (seriousInsertIndex !== -1) {
+        const serColumns = [
+          serDeathIndex,
+          serLifeThreatIndex,
+          serHospitalizationIndex,
+          serDisabilityIndex,
+          serAnomalyIndex,
+          serMedicallyImportantIndex,
+        ];
+        const hasAnySerValue = serColumns.some((idx) => {
+          if (idx === -1 || idx >= row.length) return false;
+          const val = row[idx]?.toString().trim();
+          return val !== "" && val !== undefined && val !== null;
+        });
+        newRow.splice(seriousInsertIndex, 0, hasAnySerValue ? "Y" : "N");
       }
 
       return newRow;
@@ -1144,7 +1195,7 @@ export const getServerSideProps: GetServerSideProps<
 > = async () => {
   return {
     props: {
-      title: "파일 변환",
+      title: "원시자료 변환",
       subtitle: "",
     },
   };

@@ -8,7 +8,7 @@ import { useRouter } from 'next/router';
 function AppContent({ Component, pageProps }: Pick<AppProps, 'Component' | 'pageProps'>) {
     const router = useRouter();
     const isLoginPage = router.pathname === '/login';
-    const isRootPage = router.pathname === '/';
+    const isAdminPage = router.pathname === '/' || router.pathname === '/narrative';
 
     // 모바일 뷰포트 높이 설정: svh 미지원 구형 브라우저(2022년 이전)에서만 --vh 변수로 폴백
     // CSS에서 height: calc(var(--vh, 1vh) * 100); height: 100svh; 형태로 사용
@@ -31,8 +31,8 @@ function AppContent({ Component, pageProps }: Pick<AppProps, 'Component' | 'page
         return <Component {...pageProps} />;
     }
 
-    // 루트 페이지(어드민 메인)는 AdminLayout 적용
-    if (isRootPage) {
+    // 어드민 페이지는 AdminLayout 적용
+    if (isAdminPage) {
         const adminPageProps = pageProps as { title?: string; subtitle?: string };
         return (
             <AdminLayout title={adminPageProps.title} subtitle={adminPageProps.subtitle}>

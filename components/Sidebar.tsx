@@ -7,7 +7,7 @@ type NavItem = {
   label: string;
 };
 
-const navItems: NavItem[] = [{ href: "/", label: "파일 변환" }];
+const navItems: NavItem[] = [{ href: "/", label: "원시자료 변환" },{ href: "/narrative", label: "NARRATIVE" }];
 
 export default function Sidebar() {
   const router = useRouter();

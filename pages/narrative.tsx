@@ -15,6 +15,7 @@ interface KaersData {
   patientSex: string;       // DEMO 시트의 PATIENT SEX
   patientBirthYear: string; // DEMO 시트의 PATIENT BIRTH YEAR
   adrStartDate: string;     // EVENT 시트의 ADR_START_DATE
+  adrMeddraEngList: string[]; // EVENT 시트의 ADR_MEDDRA_ENG (여러 개)
 }
 
 interface UploadedFile {
@@ -178,8 +179,45 @@ export default function NarrativePage({
           "PATIENT BIRTH YEAR",
         ]);
 
-        // EVENT 시트에서 ADR_START_DATE 추출
+        // EVENT 시트에서 ADR_START_DATE, ADR_MEDDRA_ENG 추출
         const eventMap = parseSheetToMap(workbook, "EVENT", "KAERS_NO", ["ADR_START_DATE"]);
+
+        // EVENT 시트에서 ADR_MEDDRA_ENG 여러 개 추출 (동일 KAERS_NO의 모든 값)
+        const eventMeddraMap = new Map<string, string[]>();
+        const eventSheet = workbook.SheetNames.find(
+          (name) => name.toUpperCase() === "EVENT"
+        );
+        if (eventSheet) {
+          const worksheet = workbook.Sheets[eventSheet];
+          const data = XLSX.utils.sheet_to_json(worksheet, {
+            header: 1,
+            blankrows: false,
+          }) as string[][];
+
+          if (data.length > 0) {
+            const [header, ...rows] = data;
+            const kaersNoIdx = header.findIndex(
+              (col) => col?.toString().toUpperCase() === "KAERS_NO"
+            );
+            const adrMeddraEngIdx = header.findIndex(
+              (col) => col?.toString().toUpperCase() === "ADR_MEDDRA_ENG"
+            );
+
+            if (kaersNoIdx !== -1 && adrMeddraEngIdx !== -1) {
+              rows.forEach((row) => {
+                const kaersNo = row[kaersNoIdx]?.toString().trim();
+                const adrMeddraEng = row[adrMeddraEngIdx]?.toString().trim();
+
+                if (kaersNo && adrMeddraEng) {
+                  if (!eventMeddraMap.has(kaersNo)) {
+                    eventMeddraMap.set(kaersNo, []);
+                  }
+                  eventMeddraMap.get(kaersNo)!.push(adrMeddraEng);
+                }
+              });
+            }
+          }
+        }
 
         // GROUP 시트의 KAERS_NO 기준으로 데이터 조합
         const kaersDataList: KaersData[] = [];
@@ -194,6 +232,7 @@ export default function NarrativePage({
             patientSex: demoData["PATIENT SEX"] ?? "",
             patientBirthYear: demoData["PATIENT BIRTH YEAR"] ?? "",
             adrStartDate: eventData["ADR_START_DATE"] ?? "",
+            adrMeddraEngList: eventMeddraMap.get(kaersNo) ?? [],
           });
         });
 
@@ -285,6 +324,7 @@ export default function NarrativePage({
     const COL_SUSPECTED_DRUG = 5;     // Suspected Drug (← DRUG_CODE)
     const COL_PATIENT_GENDER = 6;     // Patient Gender (← PATIENT SEX)
     const COL_PATIENT_DOB = 7;        // Patient DOB (← PATIENT BIRTH YEAR)
+    const COL_EVENT = 8;              // Event (← ADR_MEDDRA_ENG, 여러 개 줄바꿈)
     const COL_ONSET_DATE = 13;        // Onset date (← ADR_START_DATE)
 
     allKaersData.forEach((data) => {
@@ -294,6 +334,7 @@ export default function NarrativePage({
       row[COL_SUSPECTED_DRUG] = data.drugCode;
       row[COL_PATIENT_GENDER] = data.patientSex;
       row[COL_PATIENT_DOB] = data.patientBirthYear;
+      row[COL_EVENT] = data.adrMeddraEngList.join("\n"); // 여러 값 줄바꿈으로 연결
       row[COL_ONSET_DATE] = data.adrStartDate;
       sheetData.push(row);
     });

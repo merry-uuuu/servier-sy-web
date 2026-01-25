@@ -524,14 +524,27 @@ export default function AdminDashboard({
   ): XLSX.ColInfo[] => {
     const maxLens: number[] = [];
 
+    // 전각 문자(한글, 한자 등) 너비를 2로 계산
+    const getDisplayWidth = (str: string): number => {
+      let width = 0;
+      for (const char of str) {
+        if (/[\u1100-\u11FF\u3000-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]/.test(char)) {
+          width += 2;
+        } else {
+          width += 1;
+        }
+      }
+      return width;
+    };
+
     rows.forEach((row) => {
       row.forEach((cell, i) => {
-        const len = String(cell ?? "").length;
+        const len = getDisplayWidth(String(cell ?? ""));
         maxLens[i] = Math.max(maxLens[i] ?? 0, len);
       });
     });
 
-    return maxLens.map((len) => ({ wch: Math.min(len + 5, 10000) }));
+    return maxLens.map((len) => ({ wch: Math.min(len + 2, 10000) }));
   };
 
   // DEMO 시트 전용 변환: 헤더 이름 변경 + REPORT_TYPE 값 매핑

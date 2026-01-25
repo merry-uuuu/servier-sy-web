@@ -43,6 +43,8 @@ import {
   ASSESSMENT_HEADER_RENAMES,
   CAUSALITY_ASSESSMENT_MAP,
 } from "@/libs/client/trans/11_ASSESSMENT";
+import { DRUG2_HEADER_RENAMES } from "@/libs/client/trans/8_DRUG2";
+import { DRUG3_HEADER_RENAMES } from "@/libs/client/trans/9_DRUG3";
 
 type AdminDashboardProps = {
   title?: string;
@@ -76,7 +78,6 @@ const DRUG_CODE_CSV_PATH = "/templates/의약품품목코드.csv";
 const DOSAGE_UNIT_CSV_PATH = "/templates/투여량 단위.csv";
 const INGREDIENT_CODE_CSV_PATH = "/templates/의약품성분코드.csv";
 const EDQM_CODE_CSV_PATH = "/templates/EDQM코드.csv";
-const KCD7_CSV_PATH = "/templates/KCD7차.csv";
 const KCD8_CSV_PATH = "/templates/KCD8차.csv";
 const WHOART_CODE_CSV_PATH = "/templates/ WHOART 코드집.csv";
 
@@ -85,7 +86,6 @@ let dosageUnitMapPromise: Promise<Map<string, string>> | null = null;
 let ingredientCodeMapPromise: Promise<Map<string, string>> | null = null;
 let edqmDrugShapeMapPromise: Promise<Map<string, string>> | null = null;
 let edqmDosageRouteMapPromise: Promise<Map<string, string>> | null = null;
-let kcd7MapPromise: Promise<Map<string, string>> | null = null;
 let kcd8MapPromise: Promise<Map<string, string>> | null = null;
 let whoartEnglishMapPromise: Promise<Map<string, string>> | null = null;
 
@@ -138,7 +138,7 @@ const loadDosageUnitMap = async () => {
 
       const map = new Map<string, string>();
       rows.forEach((row) => {
-        const code = row[0]?.toString().trim();
+        const code = row[0]?.toString().trim().padStart(5, "0");
         const value = row[2]?.toString().trim();
         if (!code || !value) return;
         map.set(code, value);
@@ -244,37 +244,7 @@ const loadEdqmDosageRouteMap = async () => {
   return edqmDosageRouteMapPromise;
 };
 
-const loadKcdMap = async (version: "7" | "8") => {
-  if (version === "7") {
-    if (!kcd7MapPromise) {
-      kcd7MapPromise = (async () => {
-        const response = await fetch(KCD7_CSV_PATH);
-        if (!response.ok) {
-          throw new Error("KCD7차.csv를 불러오지 못했습니다.");
-        }
-        const csvText = await response.text();
-        const workbook = XLSX.read(csvText, { type: "string" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(worksheet, {
-          header: 1,
-          blankrows: false,
-        }) as string[][];
-
-        const map = new Map<string, string>();
-        rows.slice(1).forEach((row) => {
-          const code = row[0]?.toString().trim();
-          const value = row[2]?.toString().trim();
-          if (!code || !value) return;
-          map.set(code, value);
-        });
-
-        return map;
-      })();
-    }
-    return kcd7MapPromise;
-  }
-
+const loadKcdMap = async () => {
   if (!kcd8MapPromise) {
     kcd8MapPromise = (async () => {
       const response = await fetch(KCD8_CSV_PATH);
@@ -293,7 +263,8 @@ const loadKcdMap = async (version: "7" | "8") => {
       const map = new Map<string, string>();
       rows.slice(1).forEach((row) => {
         const code = row[0]?.toString().trim();
-        const value = row[2]?.toString().trim();
+        // KCD8차.csv has 2 columns: 질병분류코드, 영문명칭
+        const value = row[1]?.toString().trim();
         if (!code || !value) return;
         map.set(code, value);
       });
@@ -344,7 +315,6 @@ export default function AdminDashboard({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [kcdVersion, setKcdVersion] = useState<"7" | "8" | "">("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 파이프 구분자로 파싱
@@ -445,10 +415,6 @@ export default function AdminDashboard({
   // 엑셀 다운로드
   const downloadExcel = () => {
     if (uploadedFiles.length === 0) return;
-    if (uploadedFiles.some((file) => file.name === "DRUG3") && !kcdVersion) {
-      alert("KCD 7차 또는 8차를 선택해 주세요.");
-      return;
-    }
 
     const workbook = XLSX.utils.book_new();
 
@@ -850,102 +816,102 @@ export default function AdminDashboard({
     return [header, ...transformedRows];
   };
 
-  // DRUG2 시트 전용 변환: DOSAGE_QTY_UNIT 값 VLOOKUP 치환
+  // DRUG2 시트 전용 변환: 헤더 이름 변경 + DOSAGE_QTY_UNIT 값 VLOOKUP 치환
   const transformDrug2Sheet = async (data: string[][]): Promise<string[][]> => {
     if (data.length === 0) return data;
 
     const [header, ...rows] = data;
-    const dosageQtyUnitIndex = header.findIndex(
+    const renamedHeader = header.map(
+      (col) => DRUG2_HEADER_RENAMES[col] ?? col
+    );
+    const dosageQtyUnitIndex = renamedHeader.findIndex(
       (col) => col === "DOSAGE_QTY_UNIT"
     );
-    const dosageIntervalUnitIndex = header.findIndex(
-      (col) => col === "DOSAGE_INTERVAL_UNIT"
-    );
-    const dosageAdministrationUnitIndex = header.findIndex(
+    const dosageAdministrationUnitIndex = renamedHeader.findIndex(
       (col) => col === "DOSAGE_ADMINISTRATION PERIOD_UNIT"
     );
-    const drugFormulationEngIndex = header.findIndex(
+    const drugFormulationEngIndex = renamedHeader.findIndex(
       (col) => col === "DRUG_FORMULATION_ENG"
     );
-    const dosageRouteEngIndex = header.findIndex(
+    const dosageRouteEngIndex = renamedHeader.findIndex(
       (col) => col === "DOSAGE_ROUTE_ENG"
     );
-    if (
-      dosageQtyUnitIndex === -1 &&
-      dosageIntervalUnitIndex === -1 &&
-      dosageAdministrationUnitIndex === -1 &&
-      drugFormulationEngIndex === -1 &&
-      dosageRouteEngIndex === -1
-    ) {
-      return data;
-    }
+    const dosageIntervalUnitIndex2 = renamedHeader.findIndex(
+      (col) => col === "DOSAGE_INTERVAL_UNIT"
+    );
+
+    const dosageIntervalUnitMap: Record<string, string> = {
+      "00109": "seconds",
+      "00104": "minutes",
+      "00105": "hours",
+      "00107": "days",
+      "00108": "weeks",
+      "00106": "months",
+      "00103": "years",
+      "00009": "decades",
+      "00010": "trimester",
+      "00011": "periodically",
+      "00012": "if necessary",
+      "00013": "total",
+    };
 
     const dosageUnitMap = await loadDosageUnitMap();
     const edqmDrugShapeMap = await loadEdqmDrugShapeMap();
     const edqmDosageRouteMap = await loadEdqmDosageRouteMap();
+
     const transformedRows = rows.map((row) => {
       const newRow = [...row];
-      if (dosageQtyUnitIndex < row.length) {
+      if (dosageQtyUnitIndex !== -1 && dosageQtyUnitIndex < row.length) {
         const rawValue = row[dosageQtyUnitIndex]?.toString().trim();
         if (rawValue) {
           newRow[dosageQtyUnitIndex] = dosageUnitMap.get(rawValue) ?? rawValue;
         }
       }
-      if (
-        dosageIntervalUnitIndex !== -1 &&
-        dosageIntervalUnitIndex < row.length
-      ) {
-        const rawValue = row[dosageIntervalUnitIndex]?.toString().trim();
+      if (dosageIntervalUnitIndex2 !== -1 && dosageIntervalUnitIndex2 < row.length) {
+        const rawValue = row[dosageIntervalUnitIndex2]?.toString().trim();
         if (rawValue) {
-          newRow[dosageIntervalUnitIndex] =
-            dosageUnitMap.get(rawValue) ?? rawValue;
+          newRow[dosageIntervalUnitIndex2] = dosageIntervalUnitMap[rawValue] ?? rawValue;
         }
       }
-      if (
-        dosageAdministrationUnitIndex !== -1 &&
-        dosageAdministrationUnitIndex < row.length
-      ) {
+      if (dosageAdministrationUnitIndex !== -1 && dosageAdministrationUnitIndex < row.length) {
         const rawValue = row[dosageAdministrationUnitIndex]?.toString().trim();
         if (rawValue) {
-          newRow[dosageAdministrationUnitIndex] =
-            dosageUnitMap.get(rawValue) ?? rawValue;
+          newRow[dosageAdministrationUnitIndex] = dosageIntervalUnitMap[rawValue] ?? rawValue;
         }
       }
-      if (
-        drugFormulationEngIndex !== -1 &&
-        drugFormulationEngIndex < row.length
-      ) {
+      if (drugFormulationEngIndex !== -1 && drugFormulationEngIndex < row.length) {
         const rawValue = row[drugFormulationEngIndex]?.toString().trim();
         if (rawValue) {
-          newRow[drugFormulationEngIndex] =
-            edqmDrugShapeMap.get(rawValue) ?? rawValue;
+          newRow[drugFormulationEngIndex] = edqmDrugShapeMap.get(rawValue) ?? rawValue;
         }
       }
       if (dosageRouteEngIndex !== -1 && dosageRouteEngIndex < row.length) {
         const rawValue = row[dosageRouteEngIndex]?.toString().trim();
         if (rawValue) {
-          newRow[dosageRouteEngIndex] =
-            edqmDosageRouteMap.get(rawValue) ?? rawValue;
+          newRow[dosageRouteEngIndex] = edqmDosageRouteMap.get(rawValue) ?? rawValue;
         }
       }
       return newRow;
     });
 
-    return [header, ...transformedRows];
+    return [renamedHeader, ...transformedRows];
   };
 
-  // DRUG3 시트 전용 변환: PURPOSE OF ADMINISTRATION 값 VLOOKUP 치환
+  // DRUG3 시트 전용 변환: 헤더 이름 변경 + PURPOSE OF ADMINISTRATION 값 VLOOKUP 치환 (KCD8차 고정)
   const transformDrug3Sheet = async (data: string[][]): Promise<string[][]> => {
     if (data.length === 0) return data;
-    if (!kcdVersion) return data;
 
     const [header, ...rows] = data;
-    const purposeIndex = header.findIndex(
+    const renamedHeader = header.map(
+      (col) => DRUG3_HEADER_RENAMES[col] ?? col
+    );
+
+    const purposeIndex = renamedHeader.findIndex(
       (col) => col === "PURPOSE OF ADMINISTRATION"
     );
-    if (purposeIndex === -1) return data;
+    if (purposeIndex === -1) return [renamedHeader, ...rows];
 
-    const kcdMap = await loadKcdMap(kcdVersion);
+    const kcdMap = await loadKcdMap();
     const transformedRows = rows.map((row) => {
       const newRow = [...row];
       if (purposeIndex < row.length) {
@@ -957,7 +923,7 @@ export default function AdminDashboard({
       return newRow;
     });
 
-    return [header, ...transformedRows];
+    return [renamedHeader, ...transformedRows];
   };
 
   // DRUG_EVENT 시트 전용 변환: 헤더 이름 변경 + RECHALLENGE_ADR_REOCCUR 값 매핑
@@ -1072,33 +1038,6 @@ export default function AdminDashboard({
               업로드된 파일 {uploadedFiles.length}개
             </h3>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-[4px] bg-[#24226A]/10 px-3 py-1.5">
-                <span className="text-xs font-semibold text-[#24226A]">
-                  KCD 선택
-                </span>
-                <label className="flex items-center gap-1 text-xs text-[#24226A]">
-                  <input
-                    type="radio"
-                    name="kcdVersion"
-                    value="7"
-                    checked={kcdVersion === "7"}
-                    onChange={() => setKcdVersion("7")}
-                    className="h-3.5 w-3.5 accent-[#24226A] focus:outline-none focus:ring-0"
-                  />
-                  7차
-                </label>
-                <label className="flex items-center gap-1 text-xs text-[#24226A]">
-                  <input
-                    type="radio"
-                    name="kcdVersion"
-                    value="8"
-                    checked={kcdVersion === "8"}
-                    onChange={() => setKcdVersion("8")}
-                    className="h-3.5 w-3.5 accent-[#24226A] focus:outline-none focus:ring-0"
-                  />
-                  8차
-                </label>
-              </div>
               <button
                 onClick={clearAll}
                 className="px-3 py-1.5 text-sm text-[#24226A] bg-white border border-[#24226A]/20 rounded-[4px] hover:bg-[#24226A]/10"

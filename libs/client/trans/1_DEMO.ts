@@ -52,7 +52,7 @@ export const STUDY_TYPE_DETAIL_MAP: Record<string, string> = {
 
 //열4
 export const NULLIFICATION_AMENDMENT_MAP: Record<string, string> = {
-  "1": "Delete",
+  "1": "Nullification",
   "2": "Amendment",
 };
 

@@ -45,6 +45,7 @@ import {
 } from "@/libs/client/trans/11_ASSESSMENT";
 import { DRUG2_HEADER_RENAMES } from "@/libs/client/trans/8_DRUG2";
 import { DRUG3_HEADER_RENAMES } from "@/libs/client/trans/9_DRUG3";
+import { GROUP_HEADER_RENAMES } from "@/libs/client/trans/12_GROUP";
 
 type AdminDashboardProps = {
   title?: string;
@@ -293,11 +294,15 @@ const loadWhoartEnglishMap = async () => {
       }) as string[][];
 
       const map = new Map<string, string>();
-      rows.slice(2).forEach((row) => {
-        const arrn = row[0]?.toString().trim();
-        const seq = row[1]?.toString().trim();
+      // blankrows: false로 빈 행이 제거되므로 헤더(1행)만 건너뜀
+      rows.slice(1).forEach((row) => {
+        const arrnRaw = row[0]?.toString().trim();
+        const seqRaw = row[1]?.toString().trim();
         const english = row[6]?.toString().trim();
-        if (!arrn || !seq || !english) return;
+        if (!arrnRaw || !seqRaw || !english) return;
+        // ARRN은 4자리, SEQ는 3자리로 패딩
+        const arrn = arrnRaw.padStart(4, "0");
+        const seq = seqRaw.padStart(3, "0");
         map.set(`${arrn}|${seq}`, english);
       });
 
@@ -367,6 +372,8 @@ export default function AdminDashboard({
             ? transformDrugEventSheet(data)
             : nameWithoutExt === "ASSESSMENT"
             ? transformAssessmentSheet(data)
+            : nameWithoutExt === "GROUP"
+            ? transformGroupSheet(data)
             : data;
 
         newFiles.push({
@@ -493,7 +500,21 @@ export default function AdminDashboard({
     if (data.length === 0) return data;
 
     const [header, ...rows] = data;
-    const renamedHeader = header.map((col) => DEMO_HEADER_RENAMES[col] ?? col);
+
+    // KAERS_GB 열 삭제
+    const kaersGbIndex = header.findIndex((col) => col === "KAERS_GB");
+    const filteredHeader =
+      kaersGbIndex !== -1
+        ? header.filter((_, i) => i !== kaersGbIndex)
+        : header;
+    const filteredRows =
+      kaersGbIndex !== -1
+        ? rows.map((row) => row.filter((_, i) => i !== kaersGbIndex))
+        : rows;
+
+    const renamedHeader = filteredHeader.map(
+      (col) => DEMO_HEADER_RENAMES[col] ?? col
+    );
     const reportTypeIndex = renamedHeader.findIndex(
       (col) => col === "REPORT_TYPE"
     );
@@ -531,7 +552,7 @@ export default function AdminDashboard({
       (col) => col === "PREGNANCY_TERM_OCCURRENCE_UNIT"
     );
 
-    const transformedRows = rows.map((row) => {
+    const transformedRows = filteredRows.map((row) => {
       const newRow = [...row];
       if (reportTypeIndex !== -1 && reportTypeIndex < row.length) {
         const rawValue = row[reportTypeIndex];
@@ -669,6 +690,9 @@ export default function AdminDashboard({
 
     const [header, ...rows] = data;
     const renamedHeader = header.map((col) => EVENT_HEADER_RENAMES[col] ?? col);
+    const adrMeddraEngIndex = renamedHeader.findIndex(
+      (col) => col === "ADR_MEDDRA_ENG"
+    );
     const adrOutcomeIndex = renamedHeader.findIndex(
       (col) => col === "ADR_OUTCOME"
     );
@@ -680,9 +704,18 @@ export default function AdminDashboard({
     );
     const whoartEnglishMap = await loadWhoartEnglishMap();
 
-    // WHOART_IT 다음 위치에 ENGLISH TERM 열 추가
-    const englishTermInsertIndex = whoartSeqIndex !== -1 ? whoartSeqIndex + 1 : -1;
+    // ADR_MEDDRA_ENG 다음 위치에 PT, IME 열 추가
+    const ptImeInsertIndex = adrMeddraEngIndex !== -1 ? adrMeddraEngIndex + 1 : -1;
     const finalHeader = [...renamedHeader];
+    if (ptImeInsertIndex !== -1) {
+      finalHeader.splice(ptImeInsertIndex, 0, "PT", "IME");
+    }
+
+    // WHOART_IT 다음 위치에 ENGLISH TERM 열 추가 (PT, IME 추가로 인해 인덱스 조정)
+    const englishTermInsertIndex =
+      whoartSeqIndex !== -1
+        ? whoartSeqIndex + 1 + (ptImeInsertIndex !== -1 && ptImeInsertIndex <= whoartSeqIndex ? 2 : 0)
+        : -1;
     if (englishTermInsertIndex !== -1) {
       finalHeader.splice(englishTermInsertIndex, 0, "ENGLISH TERM");
     }
@@ -696,10 +729,18 @@ export default function AdminDashboard({
         newRow[adrOutcomeIndex] = ADR_OUTCOME_MAP[rawValue] ?? rawValue;
       }
 
+      // PT, IME 빈 열 추가
+      if (ptImeInsertIndex !== -1) {
+        newRow.splice(ptImeInsertIndex, 0, "", "");
+      }
+
       // ENGLISH TERM 열 추가 및 값 계산
       if (englishTermInsertIndex !== -1 && whoartArrnIndex !== -1 && whoartSeqIndex !== -1) {
-        const arrn = row[whoartArrnIndex]?.toString().trim() ?? "";
-        const seq = row[whoartSeqIndex]?.toString().trim() ?? "";
+        const arrnRaw = row[whoartArrnIndex]?.toString().trim() ?? "";
+        const seqRaw = row[whoartSeqIndex]?.toString().trim() ?? "";
+        // ARRN은 4자리, SEQ는 3자리로 패딩하여 키 매칭
+        const arrn = arrnRaw ? arrnRaw.padStart(4, "0") : "";
+        const seq = seqRaw ? seqRaw.padStart(3, "0") : "";
         const key = `${arrn}|${seq}`;
         const englishTerm = (arrn && seq) ? (whoartEnglishMap.get(key) ?? "") : "";
         newRow.splice(englishTermInsertIndex, 0, englishTerm);
@@ -770,8 +811,10 @@ export default function AdminDashboard({
       ) {
         const rawValue = row[accumulateDosageUnitIndex]?.toString().trim();
         if (rawValue) {
+          // 투여량 단위 코드는 5자리로 패딩
+          const paddedValue = rawValue.padStart(5, "0");
           newRow[accumulateDosageUnitIndex] =
-            dosageUnitMap.get(rawValue) ?? rawValue;
+            dosageUnitMap.get(paddedValue) ?? rawValue;
         }
       }
       if (drugActionTakenIndex !== -1 && drugActionTakenIndex < row.length) {
@@ -864,7 +907,9 @@ export default function AdminDashboard({
       if (dosageQtyUnitIndex !== -1 && dosageQtyUnitIndex < row.length) {
         const rawValue = row[dosageQtyUnitIndex]?.toString().trim();
         if (rawValue) {
-          newRow[dosageQtyUnitIndex] = dosageUnitMap.get(rawValue) ?? rawValue;
+          // 투여량 단위 코드는 5자리로 패딩
+          const paddedValue = rawValue.padStart(5, "0");
+          newRow[dosageQtyUnitIndex] = dosageUnitMap.get(paddedValue) ?? rawValue;
         }
       }
       if (dosageIntervalUnitIndex2 !== -1 && dosageIntervalUnitIndex2 < row.length) {
@@ -973,6 +1018,18 @@ export default function AdminDashboard({
     });
 
     return [renamedHeader, ...transformedRows];
+  };
+
+  // GROUP 시트 전용 변환: 헤더 이름 변경
+  const transformGroupSheet = (data: string[][]): string[][] => {
+    if (data.length === 0) return data;
+
+    const [header, ...rows] = data;
+    const renamedHeader = header.map(
+      (col) => GROUP_HEADER_RENAMES[col] ?? col
+    );
+
+    return [renamedHeader, ...rows];
   };
 
   return (

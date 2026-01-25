@@ -697,7 +697,7 @@ export default function AdminDashboard({
     return [renamedHeader, ...transformedRows];
   };
 
-  // EVENT 시트 전용 변환: 헤더 이름 변경 + ADR_OUTCOME 값 매핑
+  // EVENT 시트 전용 변환: 헤더 이름 변경 + ADR_OUTCOME 값 매핑 + ENGLISH TERM 열 추가
   const transformEventSheet = async (data: string[][]): Promise<string[][]> => {
     if (data.length === 0) return data;
 
@@ -712,37 +712,37 @@ export default function AdminDashboard({
     const whoartSeqIndex = renamedHeader.findIndex(
       (col) => col === "WHOART_IT"
     );
-    const englishTermIndex = renamedHeader.findIndex(
-      (col) => col === "ENGLISH TERM"
-    );
     const whoartEnglishMap = await loadWhoartEnglishMap();
+
+    // WHOART_IT 다음 위치에 ENGLISH TERM 열 추가
+    const englishTermInsertIndex = whoartSeqIndex !== -1 ? whoartSeqIndex + 1 : -1;
+    const finalHeader = [...renamedHeader];
+    if (englishTermInsertIndex !== -1) {
+      finalHeader.splice(englishTermInsertIndex, 0, "ENGLISH TERM");
+    }
 
     const transformedRows = rows.map((row) => {
       const newRow = [...row];
+
+      // ADR_OUTCOME 값 매핑 (열 추가 전에 처리)
       if (adrOutcomeIndex !== -1 && adrOutcomeIndex < row.length) {
         const rawValue = row[adrOutcomeIndex];
         newRow[adrOutcomeIndex] = ADR_OUTCOME_MAP[rawValue] ?? rawValue;
       }
-      if (
-        englishTermIndex !== -1 &&
-        whoartArrnIndex !== -1 &&
-        whoartSeqIndex !== -1 &&
-        englishTermIndex < row.length &&
-        whoartArrnIndex < row.length &&
-        whoartSeqIndex < row.length
-      ) {
-        const arrn = row[whoartArrnIndex]?.toString().trim();
-        const seq = row[whoartSeqIndex]?.toString().trim();
-        if (arrn && seq) {
-          const key = `${arrn}|${seq}`;
-          newRow[englishTermIndex] =
-            whoartEnglishMap.get(key) ?? newRow[englishTermIndex];
-        }
+
+      // ENGLISH TERM 열 추가 및 값 계산
+      if (englishTermInsertIndex !== -1 && whoartArrnIndex !== -1 && whoartSeqIndex !== -1) {
+        const arrn = row[whoartArrnIndex]?.toString().trim() ?? "";
+        const seq = row[whoartSeqIndex]?.toString().trim() ?? "";
+        const key = `${arrn}|${seq}`;
+        const englishTerm = (arrn && seq) ? (whoartEnglishMap.get(key) ?? "") : "";
+        newRow.splice(englishTermInsertIndex, 0, englishTerm);
       }
+
       return newRow;
     });
 
-    return [renamedHeader, ...transformedRows];
+    return [finalHeader, ...transformedRows];
   };
 
   // TEST 시트 전용 변환: 헤더 이름 변경 + TEST_RESULT 값 매핑
@@ -833,9 +833,15 @@ export default function AdminDashboard({
     const transformedRows = rows.map((row) => {
       const newRow = [...row];
       if (ingredientIndex < row.length) {
-        const rawValue = row[ingredientIndex]?.toString().trim();
-        if (rawValue) {
-          newRow[ingredientIndex] = ingredientMap.get(rawValue) ?? rawValue;
+        // 열1의 값이 'MSK'이면 INGR_CD에도 'MSK' 입력
+        const firstColumnValue = row[0]?.toString().trim();
+        if (firstColumnValue === "MSK") {
+          newRow[ingredientIndex] = "MSK";
+        } else {
+          const rawValue = row[ingredientIndex]?.toString().trim();
+          if (rawValue) {
+            newRow[ingredientIndex] = ingredientMap.get(rawValue) ?? rawValue;
+          }
         }
       }
       return newRow;

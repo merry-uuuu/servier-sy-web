@@ -16,6 +16,7 @@ interface KaersData {
   patientBirthYear: string; // DEMO 시트의 PATIENT BIRTH YEAR
   adrStartDate: string;     // EVENT 시트의 ADR_START_DATE
   adrMeddraEngList: string[]; // EVENT 시트의 ADR_MEDDRA_ENG (여러 개)
+  causalityAssessmentList: string[]; // ASSESSMENT 시트의 CAUSALITY_ASSESSMENT (여러 개)
 }
 
 interface UploadedFile {
@@ -134,8 +135,9 @@ export default function NarrativePage({
           continue;
         }
 
-        // DRUG 시트에서 DRUG_CODE 추출 (DRUG_GROUP이 "Suspect"인 것만)
+        // DRUG 시트에서 DRUG_CODE, DRUG_SEQ 추출 (DRUG_GROUP이 "Suspect"인 것만)
         const drugMap = new Map<string, string>();
+        const drugSeqMap = new Map<string, string[]>(); // KAERS_NO별 DRUG_SEQ 목록
         const drugSheet = workbook.SheetNames.find(
           (name) => name.toUpperCase() === "DRUG"
         );
@@ -157,16 +159,73 @@ export default function NarrativePage({
             const drugGroupIdx = header.findIndex(
               (col) => col?.toString().toUpperCase() === "DRUG_GROUP"
             );
+            const drugSeqIdx = header.findIndex(
+              (col) => col?.toString().toUpperCase() === "DRUG_SEQ"
+            );
 
             if (kaersNoIdx !== -1 && drugCodeIdx !== -1) {
               rows.forEach((row) => {
                 const kaersNo = row[kaersNoIdx]?.toString().trim();
                 const drugCode = row[drugCodeIdx]?.toString().trim();
                 const drugGroup = drugGroupIdx !== -1 ? row[drugGroupIdx]?.toString().trim() : "";
+                const drugSeq = drugSeqIdx !== -1 ? row[drugSeqIdx]?.toString().trim() : "";
+
+                // DRUG_CODE가 있는 행의 DRUG_SEQ 저장
+                if (kaersNo && drugCode && drugSeq) {
+                  if (!drugSeqMap.has(kaersNo)) {
+                    drugSeqMap.set(kaersNo, []);
+                  }
+                  drugSeqMap.get(kaersNo)!.push(drugSeq);
+                }
 
                 // DRUG_GROUP이 "Suspect"인 것만 저장, 첫 번째 값 유지
                 if (kaersNo && drugCode && drugGroup === "Suspect" && !drugMap.has(kaersNo)) {
                   drugMap.set(kaersNo, drugCode);
+                }
+              });
+            }
+          }
+        }
+
+        // ASSESSMENT 시트에서 CAUSALITY_ASSESSMENT 추출
+        const assessmentMap = new Map<string, Map<string, string[]>>(); // KAERS_NO -> DRUG_SEQ -> CAUSALITY_ASSESSMENT[]
+        const assessmentSheet = workbook.SheetNames.find(
+          (name) => name.toUpperCase() === "ASSESSMENT"
+        );
+        if (assessmentSheet) {
+          const worksheet = workbook.Sheets[assessmentSheet];
+          const data = XLSX.utils.sheet_to_json(worksheet, {
+            header: 1,
+            blankrows: false,
+          }) as string[][];
+
+          if (data.length > 0) {
+            const [header, ...rows] = data;
+            const kaersNoIdx = header.findIndex(
+              (col) => col?.toString().toUpperCase() === "KAERS_NO"
+            );
+            const drugSeqIdx = header.findIndex(
+              (col) => col?.toString().toUpperCase() === "DRUG_SEQ"
+            );
+            const causalityIdx = header.findIndex(
+              (col) => col?.toString().toUpperCase() === "CAUSALITY_ASSESSMENT"
+            );
+
+            if (kaersNoIdx !== -1 && drugSeqIdx !== -1 && causalityIdx !== -1) {
+              rows.forEach((row) => {
+                const kaersNo = row[kaersNoIdx]?.toString().trim();
+                const drugSeq = row[drugSeqIdx]?.toString().trim();
+                const causality = row[causalityIdx]?.toString().trim();
+
+                if (kaersNo && drugSeq && causality) {
+                  if (!assessmentMap.has(kaersNo)) {
+                    assessmentMap.set(kaersNo, new Map());
+                  }
+                  const seqMap = assessmentMap.get(kaersNo)!;
+                  if (!seqMap.has(drugSeq)) {
+                    seqMap.set(drugSeq, []);
+                  }
+                  seqMap.get(drugSeq)!.push(causality);
                 }
               });
             }
@@ -225,6 +284,17 @@ export default function NarrativePage({
           const demoData = demoMap.get(kaersNo) ?? {};
           const eventData = eventMap.get(kaersNo) ?? {};
 
+          // DRUG_CODE가 있는 DRUG_SEQ들의 CAUSALITY_ASSESSMENT 수집
+          const causalityList: string[] = [];
+          const drugSeqs = drugSeqMap.get(kaersNo) ?? [];
+          const seqAssessmentMap = assessmentMap.get(kaersNo);
+          if (seqAssessmentMap) {
+            drugSeqs.forEach((seq) => {
+              const assessments = seqAssessmentMap.get(seq) ?? [];
+              causalityList.push(...assessments);
+            });
+          }
+
           kaersDataList.push({
             kaersNo,
             initialFu: groupData["INITIAL_FU"] ?? "",
@@ -233,6 +303,7 @@ export default function NarrativePage({
             patientBirthYear: demoData["PATIENT BIRTH YEAR"] ?? "",
             adrStartDate: eventData["ADR_START_DATE"] ?? "",
             adrMeddraEngList: eventMeddraMap.get(kaersNo) ?? [],
+            causalityAssessmentList: causalityList,
           });
         });
 
@@ -325,6 +396,7 @@ export default function NarrativePage({
     const COL_PATIENT_GENDER = 6;     // Patient Gender (← PATIENT SEX)
     const COL_PATIENT_DOB = 7;        // Patient DOB (← PATIENT BIRTH YEAR)
     const COL_EVENT = 8;              // Event (← ADR_MEDDRA_ENG, 여러 개 줄바꿈)
+    const COL_RELATED = 11;           // Related Yes/No (← CAUSALITY_ASSESSMENT, 여러 개 줄바꿈)
     const COL_ONSET_DATE = 13;        // Onset date (← ADR_START_DATE)
 
     allKaersData.forEach((data) => {
@@ -335,6 +407,7 @@ export default function NarrativePage({
       row[COL_PATIENT_GENDER] = data.patientSex;
       row[COL_PATIENT_DOB] = data.patientBirthYear;
       row[COL_EVENT] = data.adrMeddraEngList.join("\n"); // 여러 값 줄바꿈으로 연결
+      row[COL_RELATED] = data.causalityAssessmentList.join("\n"); // 여러 값 줄바꿈으로 연결
       row[COL_ONSET_DATE] = data.adrStartDate;
       sheetData.push(row);
     });

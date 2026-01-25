@@ -386,6 +386,9 @@ export default function AdminDashboard({
       (f) => getFileNameWithoutExtension(f.name) === "DEMO"
     );
 
+    // 무효 보고건 KAERS_NO 목록 (NULLIFICATION_AMENDMENT = "1")
+    const nullificationKaersNoSet: Set<string> = new Set();
+
     if (demoFile) {
       const content = await demoFile.text();
       const data = parseAsciiFile(content);
@@ -394,6 +397,10 @@ export default function AdminDashboard({
         // SFRPNO(C열)와 KAERS_NO 열 인덱스 찾기
         const sfrpnoIndex = header.findIndex((col) => col === "SFRPNO");
         const kaersNoIndex = header.findIndex((col) => col === "KAERS_NO");
+        // NULLIFICATION_AMENDMENT 열 인덱스 찾기 (원본 헤더명: ADRSE_NVLD_ADIT_DSNT_NO)
+        const nullificationIndex = header.findIndex(
+          (col) => col === "ADRSE_NVLD_ADIT_DSNT_NO"
+        );
 
         if (sfrpnoIndex !== -1 && kaersNoIndex !== -1) {
           rows.forEach((row) => {
@@ -405,10 +412,105 @@ export default function AdminDashboard({
             }
           });
         }
+
+        // 무효 보고건 수집 (NULLIFICATION_AMENDMENT = "1")
+        if (nullificationIndex !== -1 && kaersNoIndex !== -1) {
+          rows.forEach((row) => {
+            const nullificationValue = row[nullificationIndex]?.toString().trim();
+            const kaersNoValue = row[kaersNoIndex]?.toString().trim();
+            if (nullificationValue === "1" && kaersNoValue) {
+              nullificationKaersNoSet.add(kaersNoValue);
+            }
+          });
+        }
       }
     }
 
-    // 2. 모든 파일 처리
+    // 2. GROUP 파일에서 INITIAL_FU 그룹별 정보 수집 및 삭제 대상 계산
+    const groupFile = filesArray.find(
+      (f) => getFileNameWithoutExtension(f.name) === "GROUP"
+    );
+
+    if (groupFile) {
+      const content = await groupFile.text();
+      const data = parseAsciiFile(content);
+      if (data.length > 0) {
+        const [header, ...rows] = data;
+        const kaersNoIndex = header.findIndex((col) => col === "KAERS_NO");
+        // 원본 헤더명: GROUP → INITIAL_FU, SEQ → INITIAL_FU_SEQ
+        const initialFuIndex = header.findIndex((col) => col === "GROUP");
+        const initialFuSeqIndex = header.findIndex((col) => col === "SEQ");
+
+        if (kaersNoIndex !== -1 && initialFuIndex !== -1 && initialFuSeqIndex !== -1) {
+          // INITIAL_FU별로 그룹화: { INITIAL_FU: [{ kaersNo, seq }] }
+          const groupMap = new Map<string, { kaersNo: string; seq: number }[]>();
+
+          rows.forEach((row) => {
+            const kaersNo = row[kaersNoIndex]?.toString().trim();
+            const initialFu = row[initialFuIndex]?.toString().trim();
+            const seq = parseInt(row[initialFuSeqIndex]?.toString().trim() || "0", 10);
+
+            if (kaersNo && initialFu) {
+              if (!groupMap.has(initialFu)) {
+                groupMap.set(initialFu, []);
+              }
+              groupMap.get(initialFu)!.push({ kaersNo, seq });
+            }
+          });
+
+          // 각 INITIAL_FU 그룹에 대해 삭제 대상 계산
+          groupMap.forEach((members) => {
+            // 그룹 내 무효 보고건 찾기
+            const nullificationMembers = members.filter((m) =>
+              nullificationKaersNoSet.has(m.kaersNo)
+            );
+            const hasNullification = nullificationMembers.length > 0;
+            const maxSeq = Math.max(...members.map((m) => m.seq));
+            const hasSeq1 = members.some((m) => m.seq === 1);
+
+            if (hasNullification) {
+              // 무효 보고건이 있는 경우
+              const nullificationMaxSeq = Math.max(
+                ...nullificationMembers.map((m) => m.seq)
+              );
+
+              if (nullificationMaxSeq < maxSeq) {
+                // 우선순위 1: 무효건보다 더 큰 SEQ 존재 → 가장 큰 SEQ만 남기고 모두 삭제
+                members.forEach((m) => {
+                  if (m.seq !== maxSeq) {
+                    kaersNoToDelete.add(m.kaersNo);
+                  }
+                });
+              } else {
+                // 무효건이 가장 큰 SEQ인 경우
+                if (hasSeq1) {
+                  // 우선순위 2: SEQ=1 존재 → 전체 삭제
+                  members.forEach((m) => {
+                    kaersNoToDelete.add(m.kaersNo);
+                  });
+                } else {
+                  // 우선순위 3: SEQ=1 없음 → 무효건(가장 큰 SEQ)만 남기고 나머지 삭제
+                  members.forEach((m) => {
+                    if (m.seq !== maxSeq) {
+                      kaersNoToDelete.add(m.kaersNo);
+                    }
+                  });
+                }
+              }
+            } else {
+              // 무효 보고건이 없는 경우: 기본 중복 제거 (가장 큰 SEQ만 유지)
+              members.forEach((m) => {
+                if (m.seq !== maxSeq) {
+                  kaersNoToDelete.add(m.kaersNo);
+                }
+              });
+            }
+          });
+        }
+      }
+    }
+
+    // 3. 모든 파일 처리
     for (const file of filesArray) {
       try {
         const content = await file.text();

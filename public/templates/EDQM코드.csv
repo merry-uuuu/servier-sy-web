@@ -1,81 +1,205 @@
 ,,,,,
 ,■ DRUG_SHAPE_ID(의약품 제형1),,,■ DOSAGE_ROUTE_ID(투여경로1),
 ,코드,코드명,,코드,코드명
-,PDF-10100500,Concentrate for oral suspension,,ROA-20001000,Auricular use
-,PDF-10101000,"Oral drops, solution",,ROA-20002500,Buccal use
-,PDF-10102000,"Oral drops, suspension",,ROA-20003000,Cutaneous use
-,PDF-10103000,"Oral drops, emulsion",,ROA-20004000,Dental use
-,PDF-10104000,Oral liquid,,ROA-20006000,Endocervical use
-,PDF-10105000,Oral solution,,ROA-20007000,Endosinusial use
-,PDF-10106000,Oral suspension,,ROA-20008000,Endotracheopulmonary use
-,PDF-10107000,Oral emulsion,,ROA-20009000,Epidural use
-,PDF-10108000,Oral gel,,ROA-20010000,Epilesional use
-,PDF-10109000,Oral paste,,ROA-20011000,Extra-amniotic use
-,PDF-10110000,Powder for oral solution,,ROA-20011500,Extracorporeal use
-,PDF-10111000,Powder for oral suspension,,ROA-20013000,Gastroenteral use
-,PDF-10112000,Granules for oral solution,,ROA-20013500,Gastric use
-,PDF-10113000,Granules for oral suspension,,ROA-20014000,Gingival use
-,PDF-10117000,Syrup,,ROA-20015000,Haemodialysis
-,PDF-10118000,Powder for syrup,,ROA-20015500,Implantation
-,PDF-10119000,Granules for syrup,,ROA-20019500,Infiltration
-,PDF-10120000,Soluble tablet,,ROA-20020000,Inhalation use
-,PDF-10121000,Dispersible tablet,,ROA-20021000,Intestinal use
-,PDF-10121500,Dispersible tablets for dose dispenser,,ROA-20022000,Intra-amniotic use
-,PDF-10122000,Herbal tea,,ROA-20023000,Intra-arterial use
-,PDF-10201000,Oral powder,,ROA-20024000,Intra-articular use
-,PDF-10202000,Instant herbal tea,,ROA-20025000,Intrabursal use
-,PDF-10203000,Effervescent powder,,ROA-20025500,Intracameral use
-,PDF-10204000,Granules,,ROA-20026000,Intracardiac use
-,PDF-10205000,Effervescent granules,,ROA-20026500,Intracartilaginous use
-,PDF-10206000,Gastro-resistant granules,,ROA-20027000,Intracavernous use
-,PDF-10207000,Prolonged-release granules,,ROA-20027010,Intracerebral use
-,PDF-10208000,Modified-release granules,,ROA-20028000,Intracervical use
-,PDF-10209000,Cachet,,ROA-20028300,Intracholangiopancreatic use
-,PDF-10210000,"Capsule, hard",,ROA-20028500,Intracisternal use
-,PDF-10211000,"Capsule, soft",,ROA-20029000,Intracoronary use
-,PDF-10212000,"Gastro-resistant capsule, hard",,ROA-20030000,Intradermal use
-,PDF-10213000,"Gastro-resistant capsule, soft",,ROA-20031000,Intradiscal use
-,PDF-10214000,"Chewable capsule, soft",,ROA-20031500,Intraepidermal use
-,PDF-10215000,"Prolonged-release capsule, hard",,ROA-20031700,Intraglandular use
-,PDF-10216000,"Prolonged-release capsule, soft",,ROA-20032000,Intralesional use
-,PDF-10217000,"Modified-release capsule, hard",,ROA-20033000,Intralymphatic use
-,PDF-10218000,"Modified-release capsule, soft",,ROA-20035000,Intramuscular use
-,PDF-10219000,Tablet,,ROA-20036000,Intraocular use
-,PDF-10220000,Coated tablet,,ROA-20036500,Intraosseous use
-,PDF-10221000,Film-coated tablet,,ROA-20039500,Intraprostatic use
-,PDF-10222000,Effervescent tablet,,ROA-20041000,Intrasternal use
-,PDF-10223000,Orodispersible tablet,,ROA-20044000,Intra-uterine use
-,PDF-10224000,Oral lyophilisate,,ROA-20045000,Intravenous use
-,PDF-10225000,Gastro-resistant tablet,,ROA-20046000,Intravesical use
-,PDF-10226000,Prolonged-release tablet,,ROA-20047000,Intravitreal use
-,PDF-10227000,Modified-release tablet,,ROA-20047500,Iontophoresis
-,PDF-10228000,Chewable tablet,,ROA-20048000,Laryngopharyngeal use
-,PDF-10229000,Medicated chewing-gum,,ROA-20048500,Nail use
-,PDF-10230000,Oral gum,,ROA-20049000,Nasal use
-,PDF-10230500,Pill,,ROA-20051000,Ocular use
-,PDF-10231000,Pillules,,ROA-20053000,Oral use
-,PDF-10236100,Orodispersible film,,ROA-20054000,Oromucosal use
-,PDF-10301000,Gargle,,ROA-20055000,Oropharyngeal use
-,PDF-10302000,Concentrate for gargle,,ROA-20057000,Periarticular use
-,PDF-10303000,"Gargle, powder for solution",,ROA-20058000,Perineural use
-,PDF-10304000,"Gargle, tablet for solution",,ROA-20059000,Periodontal use
-,PDF-10305000,Oromucosal solution,,ROA-20059300,Periosseous use
-,PDF-10306000,Oromucosal suspension,,ROA-20059400,Peritumoral use
-,PDF-10307000,Oromucosal drops,,ROA-20059500,Posterior juxtascleral use
-,PDF-10308100,"Oromucosal spray, emulsion",,ROA-20061000,Rectal use
-,PDF-10308200,"Oromucosal spray, solution",,ROA-20061500,Retrobulbar use
-,PDF-10308300,"Oromucosal spray, suspension",,ROA-20062000,Route of administration not applicable
-,PDF-10309100,"Sublingual spray, emulsion",,ROA-20063000,Skin scarification
-,PDF-10309200,"Sublingual spray, solution",,ROA-20065000,Subconjunctival use
-,PDF-10309300,"Sublingual spray, suspension",,ROA-20066000,Subcutaneous use
-,PDF-10310000,Mouthwash,,ROA-20067000,Sublingual use
-,PDF-10311000,"Mouthwash, tablet for solution",,ROA-20067500,Submucosal use
-,PDF-10312000,Gingival solution,,ROA-20070000,Transdermal use
-,PDF-10313000,Oromucosal gel,,ROA-20071000,Urethral use
-,PDF-10314000,Oromucosal paste,,ROA-20072000,Vaginal use
-,PDF-10314005,Oromucosal ointment,,ROA-20080000,Intracerebroventricular use
-,PDF-10314010,Oromucosal cream,,ROA-20081000,Subretinal use
-,PDF-10314011,Buccal film,,ROA-20084000,Intracorneal use
+,BDF-0049,Block,,ROA-20001000,Auricular use
+,BDF-0050,Cachet,,ROA-20002500,Buccal use
+,BDF-0051,Capsule,,ROA-20003000,Cutaneous use
+,BDF-0052,Film,,ROA-20004000,Dental use
+,BDF-0053,Granules,,ROA-20006000,Endocervical use
+,BDF-0054,Gum,,ROA-20007000,Endosinusial use
+,BDF-0055,Implant,,ROA-20008000,Endotracheopulmonary use
+,BDF-0056,Impregnated material,,ROA-20009000,Epidural use
+,BDF-0058,Lozenge,,ROA-20010000,Epilesional use
+,BDF-0059,Lyophilisate,,ROA-20011000,Extra-amniotic use
+,BDF-0060,Pastille,,ROA-20011500,Extracorporeal use
+,BDF-0061,Patch,,ROA-20013000,Gastroenteral use
+,BDF-0063,Pessary,,ROA-20013500,Gastric use
+,BDF-0064,Pillules,,ROA-20014000,Gingival use
+,BDF-0065,Plaster,,ROA-20015000,Haemodialysis
+,BDF-0066,Powder,,ROA-20015500,Implantation
+,BDF-0067,Stick,,ROA-20019500,Infiltration
+,BDF-0068,Suppository,,ROA-20020000,Inhalation use
+,BDF-0069,Tablet,,ROA-20021000,Intestinal use
+,BDF-0070,Tea,,ROA-20022000,Intra-amniotic use
+,BDF-0071,Cream,,ROA-20023000,Intra-arterial use
+,BDF-0072,Foam,,ROA-20024000,Intra-articular use
+,BDF-0073,Gel,,ROA-20025000,Intrabursal use
+,BDF-0074,Ointment,,ROA-20025500,Intracameral use
+,BDF-0075,Paste,,ROA-20026000,Intracardiac use
+,BDF-0076,Poultice,,ROA-20026500,Intracartilaginous use
+,BDF-0077,Collodion,,ROA-20027000,Intracavernous use
+,BDF-0078,Concentrate,,ROA-20027010,Intracerebral use
+,BDF-0079,Dispersion,,ROA-20028000,Intracervical use
+,BDF-0080,Emulsion,,ROA-20028300,Intracholangiopancreatic use
+,BDF-0081,Lacquer,,ROA-20028500,Intracisternal use
+,BDF-0082,Liquid,,ROA-20029000,Intracoronary use
+,BDF-0083,Solution,,ROA-20030000,Intradermal use
+,BDF-0084,Solvent,,ROA-20031000,Intradiscal use
+,BDF-0085,Suspension,,ROA-20031500,Intraepidermal use
+,BDF-0086,Syrup,,ROA-20031700,Intraglandular use
+,BDF-0087,Medicinal gas,,ROA-20032000,Intralesional use
+,BDF-0088,Insert,,ROA-20033000,Intralymphatic use
+,BDF-0089,Additive (unspecified),,ROA-20035000,Intramuscular use
+,BDF-0090,Drops (unspecified),,ROA-20036000,Intraocular use
+,BDF-0092,Radiopharmaceutical,,ROA-20036500,Intraosseous use
+,BDF-0093,Shampoo,,ROA-20037000,Intrapericardial use
+,BDF-0094,Spray (unspecified),,ROA-20038000,Intraperitoneal use
+,BDF-0095,System,,ROA-20039000,Intrapleural use
+,BDF-0096,Unknown,,ROA-20039200,Intraportal use
+,BDF-0102,Pouch,,ROA-20039500,Intraprostatic use
+,BDF-0103,Cement,,ROA-20041000,Intrasternal use
+,BDF-0114,Herbal material (unprocessed),,ROA-20042000,Intrathecal use
+,BDF-0115,Live animal,,ROA-20043000,Intratumoral use
+,CDF-10114000,Powder and solvent for oral solution,,ROA-20044000,Intra-uterine use
+,CDF-10115000,Powder and solvent for oral suspension,,ROA-20045000,Intravenous use
+,CDF-10115500,Powder and solvent for syrup,,ROA-20046000,Intravesical use
+,CDF-10412000,Powder and solution for dental cement,,ROA-20047000,Intravitreal use
+,CDF-10606000,"Eye drops, powder and solvent for solution",,ROA-20047500,Iontophoresis
+,CDF-10607000,"Eye drops, powder and solvent for suspension",,ROA-20048000,Laryngopharyngeal use
+,CDF-10707000,"Ear drops, powder and solvent for suspension",,ROA-20048500,Nail use
+,CDF-11207000,Powder and solvent for solution for injection,,ROA-20049000,Nasal use
+,CDF-11208000,Powder and solvent for suspension for injection,,ROA-20051000,Ocular use
+,CDF-11214000,Powder and solvent for solution for infusion,,ROA-20053000,Oral use
+,CDF-11304000,Powder and solvent for implantation paste,,ROA-20054000,Oromucosal use
+,CDF-11604000,"Endotracheopulmonary instillation, powder and solvent for solution",,ROA-20055000,Oropharyngeal use
+,CDF-11605000,"Endotracheopulmonary instillation, powder and solvent for suspension",,ROA-20057000,Periarticular use
+,CDF-11702000,Powder and solvent for endocervical gel,,ROA-20058000,Perineural use
+,CDF-12109500,Fibrin sealant-powder and solvent for fibrin sealant,,ROA-20059000,Periodontal use
+,CDF-12116000,Powder and solvent for sealant,,ROA-20059300,Periosseous use
+,CDF-13062000,Powder for concentrate and solution for solution for infusion,,ROA-20059400,Peritumoral use
+,CDF-13119000,Effervescent powder and powder for oral suspension,,ROA-20059500,Posterior juxtascleral use
+,CDF-13121000,Powder and solution for suspension for injection,,ROA-20061000,Rectal use
+,CDF-13138000,Gastro-resistant powder and solvent for oral suspension,,ROA-20061500,Retrobulbar use
+,CDF-13143000,Concentrate and solvent for dispersion for injection,,ROA-20062000,Route of administration not applicable
+,CDF-13144000,Concentrate and solvent for intravesical solution,,ROA-20063000,Skin scarification
+,CDF-13150000,Effervescent powder and suspension for oral suspension,,ROA-20065000,Subconjunctival use
+,CDF-13153000,Concentrate and solvent for emulsion for injection,,ROA-20066000,Subcutaneous use
+,CDF-13157000,Effervescent granules and suspension for oral suspension,,ROA-20067000,Sublingual use
+,CDF-13160000,Concentrate and solvent for oral solution,,ROA-20067500,Submucosal use
+,CDF-13166000,Suspension and gel for gel,,ROA-20070000,Transdermal use
+,CDF-13170000,"Dispersion, powder and solvent for concentrate for dispersion for infusion",,ROA-20071000,Urethral use
+,CDF-13171000,Powder and effervescent powder for oral suspension,,ROA-20072000,Vaginal use
+,CDF-13172000,Powder and tablet for oral solution,,ROA-20080000,Intracerebroventricular use
+,CDF-13173000,Suspension and effervescent powder for oral suspension,,ROA-20081000,Subretinal use
+,CDF-13181000,Powder and solvent for gastro-resistant oral suspension,,ROA-20082000,Transmammary
+,CDF-13185000,Powder and solvent for solution for provocation  test,,ROA-20083000,Transplacental
+,CDF-13189000,Dispersion and solution for implantation gel,,ROA-20084000,Intracorneal use
+,CDF-50001500,Concentrate and diluent for solution for infusion,,ROA-20085000,Topical
+,CDF-50002000,Concentrate and solvent for concentrate for solution for infusion,,ROA-20086000,Intraputaminal use
+,CDF-50003000,Concentrate and solvent for cutaneous solution,,ROA-20087000,Extrapleural use
+,CDF-50004000,Concentrate and solvent for cutaneous use,,ROA-20088000,Perilesional Use
+,CDF-50005000,Concentrate and solvent for injection,,ROA-20089000,Cardioplegic use
+,CDF-50006000,Concentrate and solvent for solution for infusion,,ROA-20090000,Intradetrusorial use
+,CDF-50007000,Concentrate and solvent for solution for injection,,,
+,CDF-50007500,Concentrate and solvent for solution for injection/infusion,,,
+,CDF-50008000,Concentrate and solvent for suspension for injection,,,
+,CDF-50021500,Emulsion and suspension for emulsion for injection,,,
+,CDF-50026500,Granules and solvent for oral suspension,,,
+,CDF-50027000,Granules and solvent for suspension for injection,,,
+,CDF-50041200,Powder and gel for gel,,,
+,CDF-50041500,Powder and solution for solution for injection,,,
+,CDF-50042000,Powder and solvent for concentrate for solution for infusion,,,
+,CDF-50044000,Powder and solvent for cutaneous solution,,,
+,CDF-50044500,Powder and solvent for dispersion for injection,,,
+,CDF-50044700,Powder and solvent for emulsion for injection,,,
+,CDF-50045000,Powder and solvent for endosinusial solution,,,
+,CDF-50045500,Powder and solvent for epilesional solution,,,
+,CDF-50046000,Powder and solvent for gingival gel,,,
+,CDF-50047000,Powder and solvent for intraocular instillation solution,,,
+,CDF-50047500,Powder and solvent for intravesical solution,,,
+,CDF-50047600,Powder and solvent for intravesical suspension,,,
+,CDF-50047650,"Nasal drops, powder and solvent for solution",,,
+,CDF-50047700,Powder and solvent for nebuliser solution,,,
+,CDF-50048000,Powder and solvent for prolonged-release suspension for injection,,,
+,CDF-50048270,Powder and solvent for solution for injection/skin-prick test,,,
+,CDF-50048500,Powder and suspension for suspension for injection,,,
+,CDF-50048600,"Powder, dispersion and solvent for concentrate for dispersion for infusion",,,
+,CDF-50055350,"Powder, solvent and matrix for implantation matrix",,,
+,CDF-50062000,Suspension and effervescent granules for oral suspension,,,
+,CDF-50062500,Suspension and solution for spray,,,
+,CDF-50062750,Suspension and solvent for suspension for injection,,,
+,CDF-50064000,Tablet and solvent for rectal suspension,,,
+,CDF-50065000,Tablet and powder for oral solution,,,
+,CDF-50071000,Powder and solvent for dental gel,,,
+,CDF-50078000,Gas and solvent for dispersion for injection/infusion,,,
+,CDF-50080000,Powder and solvent for solution for injection/infusion,,,
+,PDF-10100500,Concentrate for oral suspension,,,
+,PDF-10101000,"Oral drops, solution",,,
+,PDF-10102000,"Oral drops, suspension",,,
+,PDF-10103000,"Oral drops, emulsion",,,
+,PDF-10104000,Oral liquid,,,
+,PDF-10105000,Oral solution,,,
+,PDF-10106000,Oral suspension,,,
+,PDF-10107000,Oral emulsion,,,
+,PDF-10108000,Oral gel,,,
+,PDF-10109000,Oral paste,,,
+,PDF-10110000,Powder for oral solution,,,
+,PDF-10111000,Powder for oral suspension,,,
+,PDF-10112000,Granules for oral solution,,,
+,PDF-10113000,Granules for oral suspension,,,
+,PDF-10117000,Syrup,,,
+,PDF-10118000,Powder for syrup,,,
+,PDF-10119000,Granules for syrup,,,
+,PDF-10120000,Soluble tablet,,,
+,PDF-10121000,Dispersible tablet,,,
+,PDF-10121500,Dispersible tablets for dose dispenser,,,
+,PDF-10122000,Herbal tea,,,
+,PDF-10201000,Oral powder,,,
+,PDF-10202000,Instant herbal tea,,,
+,PDF-10203000,Effervescent powder,,,
+,PDF-10204000,Granules,,,
+,PDF-10205000,Effervescent granules,,,
+,PDF-10206000,Gastro-resistant granules,,,
+,PDF-10207000,Prolonged-release granules,,,
+,PDF-10208000,Modified-release granules,,,
+,PDF-10209000,Cachet,,,
+,PDF-10210000,"Capsule, hard",,,
+,PDF-10211000,"Capsule, soft",,,
+,PDF-10212000,"Gastro-resistant capsule, hard",,,
+,PDF-10213000,"Gastro-resistant capsule, soft",,,
+,PDF-10214000,"Chewable capsule, soft",,,
+,PDF-10215000,"Prolonged-release capsule, hard",,,
+,PDF-10216000,"Prolonged-release capsule, soft",,,
+,PDF-10217000,"Modified-release capsule, hard",,,
+,PDF-10218000,"Modified-release capsule, soft",,,
+,PDF-10219000,Tablet,,,
+,PDF-10220000,Coated tablet,,,
+,PDF-10221000,Film-coated tablet,,,
+,PDF-10222000,Effervescent tablet,,,
+,PDF-10223000,Orodispersible tablet,,,
+,PDF-10224000,Oral lyophilisate,,,
+,PDF-10225000,Gastro-resistant tablet,,,
+,PDF-10226000,Prolonged-release tablet,,,
+,PDF-10227000,Modified-release tablet,,,
+,PDF-10228000,Chewable tablet,,,
+,PDF-10229000,Medicated chewing-gum,,,
+,PDF-10230000,Oral gum,,,
+,PDF-10230500,Pill,,,
+,PDF-10231000,Pillules,,,
+,PDF-10236100,Orodispersible film,,,
+,PDF-10301000,Gargle,,,
+,PDF-10302000,Concentrate for gargle,,,
+,PDF-10303000,"Gargle, powder for solution",,,
+,PDF-10304000,"Gargle, tablet for solution",,,
+,PDF-10305000,Oromucosal solution,,,
+,PDF-10306000,Oromucosal suspension,,,
+,PDF-10307000,Oromucosal drops,,,
+,PDF-10308000,Oromucosal spray,,,
+,PDF-10308100,"Oromucosal spray, emulsion",,,
+,PDF-10308200,"Oromucosal spray, solution",,,
+,PDF-10308300,"Oromucosal spray, suspension",,,
+,PDF-10309000,Sublingual spray,,,
+,PDF-10309100,"Sublingual spray, emulsion",,,
+,PDF-10309200,"Sublingual spray, solution",,,
+,PDF-10309300,"Sublingual spray, suspension",,,
+,PDF-10310000,Mouthwash,,,
+,PDF-10311000,"Mouthwash, tablet for solution",,,
+,PDF-10312000,Gingival solution,,,
+,PDF-10313000,Oromucosal gel,,,
+,PDF-10314000,Oromucosal paste,,,
+,PDF-10314005,Oromucosal ointment,,,
+,PDF-10314010,Oromucosal cream,,,
+,PDF-10314011,Buccal film,,,
 ,PDF-10315000,Gingival gel,,,
 ,PDF-10316000,Gingival paste,,,
 ,PDF-10317000,Oromucosal capsule,,,
@@ -94,16 +218,19 @@
 ,PDF-10405000,Dental powder,,,
 ,PDF-10406000,Dental solution,,,
 ,PDF-10407000,Dental suspension,,,
+,PDF-10408000,Dental emulsion,,,
 ,PDF-10409000,Toothpaste,,,
 ,PDF-10410000,Periodontal gel,,,
 ,PDF-10411000,Periodontal insert,,,
 ,PDF-10413000,Powder for dental cement,,,
 ,PDF-10414000,Solution for dental cement,,,
+,PDF-10501000,Bath additive,,,
 ,PDF-10502000,Cream,,,
 ,PDF-10503000,Gel,,,
 ,PDF-10504000,Ointment,,,
 ,PDF-10505000,Cutaneous paste,,,
 ,PDF-10506000,Medicated plaster,,,
+,PDF-10507000,Cutaneous foam,,,
 ,PDF-10508000,Shampoo,,,
 ,PDF-10509000,"Cutaneous spray, solution",,,
 ,PDF-10510000,"Cutaneous spray, suspension",,,
@@ -131,6 +258,7 @@
 ,PDF-10546250,Transdermal gel,,,
 ,PDF-10546400,Transdermal solution,,,
 ,PDF-10546500,"Transdermal spray, solution",,,
+,PDF-10547000,Transdermal system,,,
 ,PDF-10548000,Solution for skin-prick test,,,
 ,PDF-10549000,Solution for skin-scratch test,,,
 ,PDF-10550000,Plaster for provocation test,,,
@@ -190,7 +318,9 @@
 ,PDF-10914000,Medicated vaginal tampon,,,
 ,PDF-10915000,Vaginal delivery system,,,
 ,PDF-11001000,Rectal cream,,,
+,PDF-11002000,Rectal gel,,,
 ,PDF-11003000,Rectal ointment,,,
+,PDF-11004000,Rectal Foam,,,
 ,PDF-11005000,Rectal solution,,,
 ,PDF-11006000,Rectal suspension,,,
 ,PDF-11007000,Rectal emulsion,,,
@@ -202,8 +332,10 @@
 ,PDF-11013000,Suppository,,,
 ,PDF-11014000,Rectal capsule,,,
 ,PDF-11015000,Rectal tampon,,,
+,PDF-11100500,Aerosol,,,
 ,PDF-11101000,Nebuliser solution,,,
 ,PDF-11102000,Nebuliser suspension,,,
+,PDF-11103000,Powder for nebuliser suspension,,,
 ,PDF-11104000,Powder for nebuliser solution,,,
 ,PDF-11105000,Nebuliser emulsion,,,
 ,PDF-11106000,"Pressurised inhalation, solution",,,
@@ -218,11 +350,13 @@
 ,PDF-11115000,"Inhalation vapour, tablet",,,
 ,PDF-11116000,"Inhalation vapour, ointment",,,
 ,PDF-11117000,"Inhalation vapour, liquid",,,
+,PDF-11118000,Inhalation gas,,,
 ,PDF-11201000,Solution for injection,,,
 ,PDF-11202000,Suspension for injection,,,
 ,PDF-11203000,Emulsion for injection,,,
 ,PDF-11204000,Gel for injection,,,
 ,PDF-11205000,Powder for solution for injection,,,
+,PDF-11206000,Powder for suspension for injection,,,
 ,PDF-11208400,Powder for prolonged-release suspension for injection,,,
 ,PDF-11208500,Prolonged-release suspension for injection,,,
 ,PDF-11209000,Concentrate for solution for injection,,,
@@ -254,14 +388,17 @@
 ,PDF-11602000,"Endotracheopulmonary instillation, powder for solution",,,
 ,PDF-11603000,"Endotracheopulmonary instillation, suspension",,,
 ,PDF-11701000,Endocervical gel,,,
+,PDF-11901000,Intrauterine delivery system,,,
 ,PDF-12100500,Absorbable coated sponge,,,
 ,PDF-12101000,Denture lacquer,,,
 ,PDF-12102000,Anticoagulant and preservative solution for blood,,,
 ,PDF-12103000,Solution for blood fraction modification,,,
 ,PDF-12104000,Wound stick,,,
 ,PDF-12105000,Radiopharmaceutical precursor,,,
+,PDF-12106000,Radionuclide generator,,,
 ,PDF-12107000,Kit for radiopharmaceutical preparation,,,
 ,PDF-12108000,Gastroenteral solution,,,
+,PDF-12109000,Dispersion,,,
 ,PDF-12109900,Frozen solution for sealant,,,
 ,PDF-12110000,Gastroenteral suspension,,,
 ,PDF-12111000,Gastroenteral emulsion,,,
@@ -284,8 +421,10 @@
 ,PDF-12302000,"Medicinal gas, cryogenic",,,
 ,PDF-12303000,"Medicinal gas, liquefied",,,
 ,PDF-13001000,Concentrate for concentrate for solution for infusion,,,
+,PDF-13002000,Concentrate for nebuliser solution,,,
 ,PDF-13003000,Concentrate for oromucosal solution,,,
 ,PDF-13004000,Concentrate for suspension for injection,,,
+,PDF-13005000,Dispersion for concentrate for dispersion for infusion,,,
 ,PDF-13006000,"Ear drops, powder for suspension",,,
 ,PDF-13007000,Effervescent granules for oral suspension,,,
 ,PDF-13008000,Emulsion for emulsion for injection,,,
@@ -329,6 +468,7 @@
 ,PDF-13048000,Granules for suspension for injection,,,
 ,PDF-13049000,Dispersion for injection/infusion,,,
 ,PDF-13050000,Gas for dispersion for injection/infusion,,,
+,PDF-13051000,Solution for injection/skin-prick test,,,
 ,PDF-13052000,Powder for solution for injection/skin-prick test,,,
 ,PDF-13058000,Caplet,,,
 ,PDF-13061000,Solution for solution for infusion,,,
@@ -338,20 +478,70 @@
 ,PDF-13091000,Emulsion for suspension for injection,,,
 ,PDF-13102000,Transdermal ointment,,,
 ,PDF-13105000,Sublingual powder,,,
+,PDF-13106000,Oral herbal material,,,
 ,PDF-13107000,Solution for cardioplegia/organ preservation,,,
-,PDF-13115000,Medical leech,,,
+,PDF-13111000,Powder for vaginal solution,,,
+,PDF-13113000,Intrauterine gel,,,
+,PDF-13115000,Medicinal leech,,,
+,PDF-13118000,Tablet with sensor,,,
+,PDF-13123000,Urethral ointment,,,
+,PDF-13124000,Medicinal larvae,,,
+,PDF-13126000,Prolonged-release dispersion for injection,,,
+,PDF-13127000,Sublingual lyophilisate,,,
+,PDF-13128000,Prolonged-release wound solution,,,
+,PDF-13129000,Nebuliser dispersion,,,
+,PDF-13133000,Gastro-resistant oral suspension,,,
+,PDF-13134000,Prolonged-release oral suspension,,,
+,PDF-13135000,Modified-release oral suspension,,,
+,PDF-13136000,Gastro-resistant powder for oral suspension,,,
+,PDF-13139000,Concentrate for dispersion for injection,,,
+,PDF-13140000,Cutaneous/oromucosal solution,,,
+,PDF-13141000,Oromucosal pouch,,,
+,PDF-13145000,Impregnated cutaneous swab,,,
+,PDF-13148000,Prolonged-release pessary,,,
+,PDF-13149000,Oromucosal film,,,
+,PDF-13152000,Concentrate for emulsion for injection,,,
+,PDF-13154000,Film-coated granules,,,
+,PDF-13159000,"Eye drops, prolonged-release solution",,,
+,PDF-13162000,Concentrate for cutaneous emulsion,,,
+,PDF-13164000,"Mucosal spray, solution",,,
+,PDF-13165000,Suspension for gel,,,
+,PDF-13167000,"Oromucosal drops, emulsion",,,
+,PDF-13168000,"Oromucosal drops, solution",,,
+,PDF-13169000,"Oromucosal drops, suspension",,,
+,PDF-13175000,Prolonged-release chewable tablet,,,
+,PDF-13176000,Powder for prolonged-release oral suspension,,,
+,PDF-13177000,Granules for gastro-resistant oral suspension,,,
+,PDF-13178000,Powder for gastro-resistant oral suspension,,,
+,PDF-13179000,Granules for modified-release oral suspension,,,
+,PDF-13180000,Granules for prolonged-release oral suspension,,,
+,PDF-13184000,Powder for solution for provocation test,,,
+,PDF-13186000,Implantation gel,,,
+,PDF-13187000,Dispersion for implantation gel,,,
+,PDF-13188000,Solution for implantation gel,,,
+,PDF-13190000,Intracameral implant,,,
+,PDF-13191000,Intravitreal implant,,,
+,PDF-13196000,Sublingual solution,,,
+,PDF-13197000,Granules in capsule for opening,,,
+,PDF-13198000,Oral powder in capsule for opening,,,
+,PDF-13200000,Intravesical delivery system,,,
 ,PDF-30047500,Pouch,,,
 ,PDF-50001000,Chewable/dispersible tablet,,,
 ,PDF-50009000,"Concentrate for cutaneous spray, emulsion",,,
 ,PDF-50009300,Concentrate for dispersion for infusion,,,
 ,PDF-50009500,Concentrate for emulsion for infusion,,,
 ,PDF-50009750,Concentrate for intravesical solution,,,
+,PDF-50010000,Concentrate for oral solution,,,
 ,PDF-50011000,Concentrate for oral/rectal solution,,,
 ,PDF-50012000,Concentrate for peritoneal dialysis solution,,,
 ,PDF-50013000,Concentrate for solution for intravesical use,,,
 ,PDF-50013250,Concentrate for solution for peritoneal dialysis,,,
 ,PDF-50014000,Concentrate for suspension for infusion,,,
+,PDF-50015000,Cutaneous and nasal ointment,,,
+,PDF-50015100,Cutaneous/ear drops suspension,,,
 ,PDF-50015200,Cutaneous/nasal ointment,,,
+,PDF-50015300,Cutaneous/oromucosal/oral solution,,,
+,PDF-50015400,Cutaneous/oromucosal spray,,,
 ,PDF-50015450,Cutaneous solution/concentrate for oromucosal solution,,,
 ,PDF-50015500,"Cutaneous spray, emulsion",,,
 ,PDF-50016000,"Cutaneous spray, ointment",,,
@@ -384,6 +574,7 @@
 ,PDF-50033000,"Inhalation vapour, impregnated pad",,,
 ,PDF-50033100,"Inhalation vapour, impregnated plug",,,
 ,PDF-50033400,Intravesical solution/solution for injection,,,
+,PDF-50034000,Liquefied gas for dental use,,,
 ,PDF-50035000,Modified-release film-coated tablet,,,
 ,PDF-50036000,Modified-release granules for oral suspension,,,
 ,PDF-50036050,"Mouthwash, powder for solution",,,
@@ -415,11 +606,13 @@
 ,PDF-50050500,Powder for intravesical solution/solution for injection,,,
 ,PDF-50051000,Powder for intravesical suspension,,,
 ,PDF-50051100,Powder for mouth wash,,,
+,PDF-50051500,Powder for nebuliser solution/solution for injection/infusion,,,
 ,PDF-50052000,Powder for oral/rectal suspension,,,
 ,PDF-50053000,Powder for solution for injection or infusion,,,
 ,PDF-50053500,Powder for solution for injection/infusion,,,
 ,PDF-50054000,Powder for solution for intravesical use,,,
 ,PDF-50055000,Powder for solution for nasal spray,,,
+,PDF-50055150,Powder for solution/suspension for injection,,,
 ,PDF-50055500,Prolonged-release film-coated tablet,,,
 ,PDF-50056000,Prolonged-release granules for oral suspension,,,
 ,PDF-50056500,"Radiopharmaceutical precursor, solution",,,
@@ -427,6 +620,7 @@
 ,PDF-50058000,Solution for infusion and oral solution,,,
 ,PDF-50059000,Solution for injection/concentrate for solution for infusion,,,
 ,PDF-50060000,Solution for injection/infusion,,,
+,PDF-50060700,Solution for injection/infusion/rectal use,,,
 ,PDF-50061000,Solution for intraperitoneal use,,,
 ,PDF-50061500,Solution for sealant,,,
 ,PDF-50061600,Solvent for nasal use,,,
@@ -440,3 +634,42 @@
 ,PDF-50079000,Concentrate for solution for injection/infusion,,,
 ,PDF-50081000,Inhalation solution,,,
 ,PDF-50082000,"Oral drops, powder for suspension",,,
+,PFT-11010,Oral drops,,,
+,PFT-11050,Oral liquid,,,
+,PFT-12100,Capsule,,,
+,PFT-12120,Gastro-resistant capsule,,,
+,PFT-12150,Prolonged-release capsule,,,
+,PFT-12200,Tablet,,,
+,PFT-13050,Oromucosal liquid,,,
+,PFT-13100,Oromucosal spray,,,
+,PFT-13150,Sublingual spray,,,
+,PFT-13220,Lozenge,,,
+,PFT-14050,Dental liquid,,,
+,PFT-15090,Cutaneous spray,,,
+,PFT-15130,Cutaneous liquid,,,
+,PFT-16040,Eye drops,,,
+,PFT-17040,Ear drops,,,
+,PFT-17090,Ear spray,,,
+,PFT-17120,Ear wash,,,
+,PFT-18040,Nasal drops,,,
+,PFT-18080,Nasal spray,,,
+,PFT-19050,Vaginal liquid,,,
+,PFT-19100,Vaginal capsule,,,
+,PFT-20050,Enema,,,
+,PFT-21010,Nebuliser liquid,,,
+,PFT-21060,Pressurised inhalation,,,
+,PFT-21100,Inhalation powder,,,
+,PFT-21140,Inhalation vapour,,,
+,PFT-22010,Injection,,,
+,PFT-22030,Powder for concentrate,,,
+,PFT-22050,Powder for injection,,,
+,PFT-22060,Powder for prolonged-release injection,,,
+,PFT-22090,Sterile concentrate,,,
+,PFT-22100,Infusion,,,
+,PFT-22120,Powder for infusion,,,
+,PFT-26010,Endotracheopulmonary instillation,,,
+,PFT-31030,Blood fraction modifier,,,
+,PFT-31080,Gastroenteral liquid,,,
+,PFT-31090,Chewing gum,,,
+,PFT-31100,Injection/infusion,,,
+,PFT-31120,Oromucosal drops,,,

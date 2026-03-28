@@ -210,7 +210,9 @@ const loadIngredientCodeMap = async () => {
       const map = new Map<string, string>();
       rows.slice(1).forEach((row) => {
         const code = row[0]?.toString().trim();
-        const value = row[2]?.toString().trim();
+        const enName = row[2]?.toString().trim();
+        const krName = row[1]?.toString().trim();
+        const value = enName || krName;
         if (!code || !value) return;
         map.set(code, value);
       });
@@ -357,6 +359,8 @@ export default function AdminDashboard({
   subtitle,
 }: AdminDashboardProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedFilesWithMark, setUploadedFilesWithMark] = useState<UploadedFile[]>([]);
+  const [deletedRowIndexMap, setDeletedRowIndexMap] = useState<Map<string, Set<number>>>(new Map());
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -378,6 +382,8 @@ export default function AdminDashboard({
   const processFiles = useCallback(async (files: FileList | File[]) => {
     setIsProcessing(true);
     const newFiles: UploadedFile[] = [];
+    const newFilesWithMark: UploadedFile[] = [];
+    const newDeletedRowIndexMap = new Map<string, Set<number>>();
     const filesArray = Array.from(files);
 
     // 1. DEMO 파일을 먼저 찾아서 SFRPNO에 값이 있는 KAERS_NO 목록 수집
@@ -515,54 +521,78 @@ export default function AdminDashboard({
       try {
         const content = await file.text();
         let data = parseAsciiFile(content);
+        let dataWithMark = data; // 삭제표시용 (필터링 전 데이터)
         const nameWithoutExt = getFileNameWithoutExtension(file.name);
         if (!ALLOWED_SHEET_SET.has(nameWithoutExt)) {
           continue;
         }
 
         // SFRPNO에 값이 있는 KAERS_NO를 가진 행 삭제
+        const deletedIndices = new Set<number>();
         if (kaersNoToDelete.size > 0 && data.length > 0) {
           const [header, ...rows] = data;
           const kaersNoIndex = header.findIndex((col) => col === "KAERS_NO");
           if (kaersNoIndex !== -1) {
+            // 삭제 대상 행의 인덱스 기록 (0-based, 헤더 제외)
+            rows.forEach((row, idx) => {
+              const kaersNoValue = row[kaersNoIndex]?.toString().trim();
+              if (kaersNoToDelete.has(kaersNoValue)) {
+                deletedIndices.add(idx);
+              }
+            });
+
             const filteredRows = rows.filter((row) => {
               const kaersNoValue = row[kaersNoIndex]?.toString().trim();
               return !kaersNoToDelete.has(kaersNoValue);
             });
             data = [header, ...filteredRows];
+            // dataWithMark는 필터링하지 않음 (원본 유지)
+            dataWithMark = [header, ...rows];
           }
         }
 
-        const processedData =
-          nameWithoutExt === "DEMO"
-            ? transformDemoSheet(data)
+        if (deletedIndices.size > 0) {
+          newDeletedRowIndexMap.set(nameWithoutExt, deletedIndices);
+        }
+
+        const applyTransform = async (inputData: string[][]) => {
+          return nameWithoutExt === "DEMO"
+            ? transformDemoSheet(inputData)
             : nameWithoutExt === "HIST_E"
-            ? transformHistESheet(data)
+            ? transformHistESheet(inputData)
             : nameWithoutExt === "PARENT"
-            ? transformParentSheet(data)
+            ? transformParentSheet(inputData)
             : nameWithoutExt === "EVENT"
-            ? await transformEventSheet(data)
+            ? await transformEventSheet(inputData)
             : nameWithoutExt === "TEST"
-            ? transformTestSheet(data)
+            ? transformTestSheet(inputData)
             : nameWithoutExt === "DRUG"
-            ? await transformDrugSheet(data)
+            ? await transformDrugSheet(inputData)
             : nameWithoutExt === "DRUG1"
-            ? await transformDrug1Sheet(data)
+            ? await transformDrug1Sheet(inputData)
             : nameWithoutExt === "DRUG2"
-            ? await transformDrug2Sheet(data)
+            ? await transformDrug2Sheet(inputData)
             : nameWithoutExt === "DRUG3"
-            ? await transformDrug3Sheet(data)
+            ? await transformDrug3Sheet(inputData)
             : nameWithoutExt === "DRUG_EVENT"
-            ? transformDrugEventSheet(data)
+            ? transformDrugEventSheet(inputData)
             : nameWithoutExt === "ASSESSMENT"
-            ? transformAssessmentSheet(data)
+            ? transformAssessmentSheet(inputData)
             : nameWithoutExt === "GROUP"
-            ? transformGroupSheet(data)
-            : data;
+            ? transformGroupSheet(inputData)
+            : inputData;
+        };
+
+        const processedData = await applyTransform(data);
+        const processedDataWithMark = await applyTransform(dataWithMark);
 
         newFiles.push({
           name: nameWithoutExt,
           data: processedData,
+        });
+        newFilesWithMark.push({
+          name: nameWithoutExt,
+          data: processedDataWithMark,
         });
       } catch (error) {
         console.error(`파일 처리 오류: ${file.name}`, error);
@@ -570,6 +600,12 @@ export default function AdminDashboard({
     }
 
     setUploadedFiles((prev) => [...prev, ...newFiles]);
+    setUploadedFilesWithMark((prev) => [...prev, ...newFilesWithMark]);
+    setDeletedRowIndexMap((prev) => {
+      const merged = new Map(prev);
+      newDeletedRowIndexMap.forEach((v, k) => merged.set(k, v));
+      return merged;
+    });
     setIsProcessing(false);
   }, []);
 
@@ -607,9 +643,9 @@ export default function AdminDashboard({
   const downloadExcel = () => {
     if (uploadedFiles.length === 0) return;
 
+    // 파일 1: 삭제 대상 행이 제거된 버전
     const workbook = XLSX.utils.book_new();
 
-    // 허용된 이름만 순서대로 시트 생성
     ALLOWED_SHEET_ORDER.forEach((sheetName) => {
       const file = [...uploadedFiles]
         .reverse()
@@ -630,18 +666,56 @@ export default function AdminDashboard({
       XLSX.utils.book_append_sheet(workbook, worksheet, finalSheetName);
     });
 
-    // 다운로드
     XLSX.writeFile(workbook, "통합_데이터.xlsx");
+
+    // 파일 2: 삭제 대상 행을 회색 배경으로 표시한 버전
+    if (uploadedFilesWithMark.length > 0) {
+      const workbookWithMark = XLSX.utils.book_new();
+
+      ALLOWED_SHEET_ORDER.forEach((sheetName) => {
+        const file = [...uploadedFilesWithMark]
+          .reverse()
+          .find((f) => f.name === sheetName);
+        if (!file) return;
+
+        let finalSheetName = sheetName.substring(0, 31);
+        let counter = 1;
+        while (workbookWithMark.SheetNames.includes(finalSheetName)) {
+          const suffix = `_${counter}`;
+          finalSheetName = sheetName.substring(0, 31 - suffix.length) + suffix;
+          counter++;
+        }
+
+        const worksheet = XLSX.utils.aoa_to_sheet(file.data);
+        worksheet["!cols"] = calcAutoCols(file.data);
+        applyHeaderStyle(worksheet);
+
+        // 삭제 대상 행에 회색 배경 적용
+        const deletedIndices = deletedRowIndexMap.get(sheetName);
+        if (deletedIndices && deletedIndices.size > 0) {
+          applyDeletedRowStyle(worksheet, deletedIndices);
+        }
+
+        XLSX.utils.book_append_sheet(workbookWithMark, worksheet, finalSheetName);
+      });
+
+      setTimeout(() => {
+        XLSX.writeFile(workbookWithMark, "통합_데이터_삭제표시.xlsx");
+      }, 100);
+    }
   };
 
   // 파일 삭제
   const removeFile = (index: number) => {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+    setUploadedFilesWithMark((prev) => prev.filter((_, i) => i !== index));
   };
 
   // 전체 초기화
   const clearAll = () => {
     setUploadedFiles([]);
+    setUploadedFilesWithMark([]);
+    setDeletedRowIndexMap(new Map());
   };
 
   const applyHeaderStyle = (worksheet: XLSX.WorkSheet) => {
@@ -662,6 +736,32 @@ export default function AdminDashboard({
         },
       };
     }
+  };
+
+  const applyDeletedRowStyle = (
+    worksheet: XLSX.WorkSheet,
+    deletedIndices: Set<number>
+  ) => {
+    const range = XLSX.utils.decode_range(worksheet["!ref"] ?? "A1");
+    deletedIndices.forEach((rowIdx) => {
+      const excelRow = rowIdx + 1; // +1 because row 0 is header
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: excelRow, c });
+        const cell = worksheet[cellAddress];
+        if (!cell) {
+          worksheet[cellAddress] = {
+            v: "",
+            t: "s",
+            s: { fill: { patternType: "solid", fgColor: { rgb: "D9D9D9" } } },
+          };
+        } else {
+          cell.s = {
+            ...cell.s,
+            fill: { patternType: "solid", fgColor: { rgb: "D9D9D9" } },
+          };
+        }
+      }
+    });
   };
 
   const calcAutoCols = (
